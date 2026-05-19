@@ -169,6 +169,8 @@ class PyAudioRecorder:
         self.output_file = output_file
         self.frames = []
         self.should_record = True
+        self.sample_rate = sample_rate
+        self.channels = channels
         
         p = self.pyaudio.PyAudio()
         
@@ -202,9 +204,9 @@ class PyAudioRecorder:
         # Guardar archivo WAV
         import wave
         wf = wave.open(self.output_file, 'wb')
-        wf.setnchannels(1)
+        wf.setnchannels(getattr(self, 'channels', 1))
         wf.setsampwidth(self.pyaudio.get_sample_size(self.pyaudio.paInt16))
-        wf.setframerate(44100)
+        wf.setframerate(getattr(self, 'sample_rate', 44100))
         wf.writeframes(b''.join(self.frames))
         wf.close()
         
@@ -328,6 +330,8 @@ class PyAudioWaveRecorder:
         self.output_file = output_file
         self.frames = []
         self.should_record = True
+        self.sample_rate = sample_rate
+        self.channels = channels
         
         p = self.pyaudio.PyAudio()
         
@@ -360,9 +364,9 @@ class PyAudioWaveRecorder:
         
         # Guardar archivo WAV
         wf = self.wave.open(self.output_file, 'wb')
-        wf.setnchannels(1)
+        wf.setnchannels(getattr(self, 'channels', 1))
         wf.setsampwidth(self.pyaudio.get_sample_size(self.pyaudio.paInt16))
-        wf.setframerate(44100)
+        wf.setframerate(getattr(self, 'sample_rate', 44100))
         wf.writeframes(b''.join(self.frames))
         wf.close()
         

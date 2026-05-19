@@ -1,61 +1,58 @@
-# Python
+# Python Compiled Files
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
 .installed.cfg
 *.egg
 
-# Virtual Environment
+# Build and PyInstaller Packaging folders
+build/
+dist/
+*.spec
+dist_backup/
+
+# Static Binaries and DLLs generated during compilation
+ffmpeg.exe
+ffprobe.exe
+tbb12.dll
+python3*.dll
+python3.dll
+
+# Databases (SQLite logs)
+*.db
+*.sqlite
+*.sqlite3
+!smac_station_template.db
+
+# Virtual Environments
 venv/
 env/
 ENV/
-.venv
+.venv/
+.env
 
-# IDE
+# Integrated Development Environments (IDEs) and System files
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
 .DS_Store
+Thumbs.db
 
-# Base de datos
-*.db
-*.sqlite
-*.sqlite3
-smac_station.db
-
-# Archivos de audio generados
+# Temp voice and generated outputs
 *.wav
 *.mp3
 !assets/audio/cortinas/*.mp3
 !assets/audio/cortinas/*.wav
 boletin_salida.wav
 temp_voz.wav
+jingle_*.wav
 
-# Archivos temporales
-*.tmp
-*.temp
-temp_*
-
-# Logs
+# Runtime and execution logs
 *.log
 logs/
-
-# Configuración local (si hay overrides)
-config_local.py
+temp_*

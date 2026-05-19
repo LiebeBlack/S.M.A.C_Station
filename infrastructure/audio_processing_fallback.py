@@ -212,7 +212,7 @@ class LibrosaProcessor:
         y2 = y2[:min_len]
         
         # Mezclar con atenuación
-        volume_factor = 10 ** (volume_db / 20)
+        volume_factor = 10 ** (-abs(volume_db) / 20)
         mixed = y1 + (y2 * volume_factor)
         
         return {'audio': mixed, 'sample_rate': sr1}
@@ -251,7 +251,7 @@ class SoundfileProcessor:
         y1 = y1[:min_len]
         y2 = y2[:min_len]
         
-        volume_factor = 10 ** (volume_db / 20)
+        volume_factor = 10 ** (-abs(volume_db) / 20)
         mixed = y1 + (y2 * volume_factor)
         
         return {'audio': mixed, 'sample_rate': sr1}

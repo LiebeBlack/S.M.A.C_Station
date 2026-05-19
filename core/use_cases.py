@@ -72,6 +72,10 @@ class ProcesadorBoletin:
                 except:
                     pass
             raise RuntimeError(f"Error al procesar audio: {str(e)}")
+            
+    def procesar_boletin(self, texto: str, ruta_audio_fondo: str, ruta_salida: str) -> str:
+        """Alias para generar_audio_bucle que mapea ruta_audio_fondo a ruta_cortina."""
+        return self.generar_audio_bucle(texto, ruta_audio_fondo, ruta_salida)
     
     def close(self):
         """Cierra los controladores de fallback."""

@@ -8,6 +8,7 @@ class DatabaseConnection:
     def __init__(self, db_path: str = "smac_station.db"):
         self.db_path = db_path
         self.connection: Optional[sqlite3.Connection] = None
+        self.connect()
     
     def connect(self) -> sqlite3.Connection:
         """Establece conexión con la base de datos local."""

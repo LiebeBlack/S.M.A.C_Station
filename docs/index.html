@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S.M.A.C. Broadcast System | Premium DSP Broadcast Console</title>
+    <!-- Google Fonts: Outfit & Space Grotesk -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #050308;
+            --bg-card: rgba(22, 13, 35, 0.7);
+            --accent-blue: #a855f7; /* Intense Neon Purple */
+            --accent-green: #ff7a00; /* Intense Neon Orange */
+            --accent-neon-green: #00ff66; /* Vibrant Emerald Green */
+            --accent-orange: #ffaa00;
+            --accent-red: #ff3355;
+            --text-light: #f9fafb;
+            --text-muted: #9ca3af;
+            --border-glow: rgba(168, 85, 247, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Prevent text copy-paste entirely and establish deep purple background */
+        body {
+            background: radial-gradient(circle at 50% -20%, #201035 0%, #030205 100%);
+            color: var(--text-light);
+            font-family: 'Outfit', sans-serif;
+            line-height: 1.6;
+            overflow-x: hidden;
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.009) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.009) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -3;
+            pointer-events: none;
+        }
+
+        /* Highly Vibrant Floating Sunset Orbs - Optimized with hardware composites for zero lag */
+        .glow-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(140px);
+            z-index: -2;
+            pointer-events: none;
+            opacity: 0.85;
+            animation: orb-float 15s infinite alternate ease-in-out;
+            will-change: transform;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .orb-1 {
+            width: 520px;
+            height: 520px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.38) 0%, rgba(3, 2, 5, 0) 70%);
+            top: -100px;
+            left: 15%;
+        }
+
+        .orb-2 {
+            width: 650px;
+            height: 650px;
+            background: radial-gradient(circle, rgba(255, 122, 0, 0.25) 0%, rgba(3, 2, 5, 0) 70%);
+            top: 30%;
+            right: -50px;
+            animation-delay: -4s;
+        }
+
+        .orb-3 {
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.22) 0%, rgba(3, 2, 5, 0) 70%);
+            bottom: 10%;
+            left: -100px;
+            animation-delay: -8s;
+        }
+
+        /* Pure translate3d for instant GPU composition layout bypass */
+        @keyframes orb-float {
+            0% { transform: translate3d(0, 0, 0); }
+            50% { transform: translate3d(0, 40px, 0); }
+            100% { transform: translate3d(0, -20px, 0); }
+        }
+
+        /* Responsive fast fade-in animation */
+        @keyframes page-fade-in {
+            0% { opacity: 0; transform: translate3d(0, 12px, 0); }
+            100% { opacity: 1; transform: translate3d(0, 0, 0); }
+        }
+
+        .hero, .dashboard-showcase, .features-section, .tech-details {
+            animation: page-fade-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        .hero { animation-delay: 0.05s; }
+        .dashboard-showcase { animation-delay: 0.15s; }
+        
+        /* Render loading optimization */
+        .features-section {
+            animation-delay: 0.25s;
+            content-visibility: auto;
+            contain-intrinsic-size: 500px;
+        }
+        
+        .tech-details {
+            animation-delay: 0.35s;
+            content-visibility: auto;
+            contain-intrinsic-size: 400px;
+        }
+
+        /* Glassmorphism Header - Centered & Aligned */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            background: rgba(5, 3, 8, 0.8);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo-text {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.6rem;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 40px rgba(168, 85, 247, 0.5);
+        }
+
+        .author-badge {
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #d8b4fe;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(168, 85, 247, 0.2);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .author-badge:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+            transform: scale(1.03);
+        }
+
+        .pulsing-green-dot {
+            display: inline-block;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background-color: var(--accent-green);
+            box-shadow: 0 0 12px var(--accent-green);
+            animation: pulse-dot 1.2s infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes pulse-dot {
+            0% { transform: scale(0.85); opacity: 0.6; }
+            50% { transform: scale(1.25); opacity: 1; }
+            100% { transform: scale(0.85); opacity: 0.6; }
+        }
+
+        /* Hero Layout - Centered */
+        .hero {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 100px 8% 60px;
+            position: relative;
+        }
+
+        /* Beautiful Glowing Active Development Banner with heartbeat animation */
+        .dev-banner {
+            background: linear-gradient(90deg, rgba(168, 85, 247, 0.15) 0%, rgba(255, 122, 0, 0.15) 100%);
+            border: 1px solid rgba(255, 122, 0, 0.35);
+            padding: 10px 28px;
+            border-radius: 30px;
+            display: inline-flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 45px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            animation: banner-heartbeat 3s infinite ease-in-out;
+            will-change: transform, box-shadow;
+            transition: all 0.2s ease;
+        }
+
+        @keyframes banner-heartbeat {
+            0% { transform: scale3d(1, 1, 1); box-shadow: 0 0 25px rgba(168, 85, 247, 0.2); }
+            50% { transform: scale3d(1.03, 1.03, 1); box-shadow: 0 0 35px rgba(255, 122, 0, 0.4); }
+            100% { transform: scale3d(1, 1, 1); box-shadow: 0 0 25px rgba(168, 85, 247, 0.2); }
+        }
+
+        .dev-banner:hover {
+            border-color: rgba(255, 122, 0, 0.55);
+        }
+
+        .dev-banner-badge {
+            background: linear-gradient(90deg, #c084fc, #ff7a00);
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            box-shadow: 0 0 12px rgba(255, 122, 0, 0.45);
+        }
+
+        .dev-banner-text {
+            font-size: 0.88rem;
+            color: #e5e7eb;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .hero-pretitle {
+            font-size: 0.9rem;
+            font-weight: 800;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            color: #d8b4fe;
+            margin-bottom: 25px;
+            background: rgba(168, 85, 247, 0.12);
+            padding: 6px 18px;
+            border-radius: 20px;
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+        }
+
+        .hero-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 4.8rem;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 25px;
+            max-width: 1000px;
+            background: linear-gradient(135deg, #ffffff 40%, #ff7a00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        .hero-desc {
+            font-size: 1.3rem;
+            color: #d1d5db;
+            max-width: 750px;
+            margin-bottom: 50px;
+            font-weight: 300;
+        }
+
+        .hero-btns {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 16px 36px;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #a855f7, #ff7a00);
+            color: #ffffff;
+            border: none;
+            box-shadow: 0 8px 30px rgba(168, 85, 247, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 122, 0, 0.6);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-light);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        /* Interactive Cockpit Container with Working JS Controls - Centered Perfectly */
+        .dashboard-showcase {
+            width: 90%;
+            max-width: 1100px;
+            background: rgba(22, 13, 35, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 40px auto 120px;
+            box-shadow: 0 45px 90px rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            position: relative;
+        }
+
+        .dashboard-showcase::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.12), rgba(255,255,255,0.02));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .showcase-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dots {
+            display: flex;
+            gap: 8px;
+        }
+
+        .dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        .dot-red { background-color: var(--accent-red); box-shadow: 0 0 10px var(--accent-red); }
+        .dot-yellow { background-color: var(--accent-orange); box-shadow: 0 0 10px var(--accent-orange); }
+        .dot-green { background-color: var(--accent-neon-green); box-shadow: 0 0 10px var(--accent-neon-green); }
+
+        .showcase-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            letter-spacing: 2.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        /* 3-Column Cockpit Layout representation */
+        .grid-mockup {
+            display: grid;
+            grid-template-columns: 3fr 4fr 3fr;
+            gap: 20px;
+            height: 380px;
+        }
+
+        .panel-mockup {
+            background-color: rgba(6, 3, 10, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .panel-mockup:hover {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+        }
+
+        .panel-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #d8b4fe;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Working Interactive Sliders CSS */
+        .interactive-range {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            outline: none;
+            margin: 10px 0;
+            transition: background 0.2s;
+        }
+
+        .interactive-range::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--accent-blue);
+            transition: transform 0.1s;
+        }
+
+        .interactive-range::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        .slider-group {
+            margin: 12px 0;
+        }
+
+        .slider-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .slider-val {
+            font-family: Consolas, monospace;
+            color: var(--text-light);
+            font-weight: bold;
+        }
+
+        /* Dual Stereo VU meter lines */
+        .meter-line {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            position: relative;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .meter-fill-l {
+            width: 65%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-neon-green) 70%, var(--accent-orange) 100%);
+            border-radius: 4px;
+            transition: width 0.1s ease-out;
+        }
+
+        .meter-fill-r {
+            width: 72%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-neon-green) 60%, var(--accent-orange) 85%, var(--accent-red) 100%);
+            border-radius: 4px;
+            transition: width 0.1s ease-out;
+        }
+
+        /* Soundwave animation controls with hardware will-change optimize */
+        .wave-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 5px;
+            height: 50px;
+            margin: 15px 0;
+            padding-bottom: 2px;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+
+        .wave-bar {
+            width: 6px;
+            background: linear-gradient(to top, var(--accent-neon-green), var(--accent-blue));
+            border-radius: 3px;
+            transform-origin: bottom;
+            animation: wave-rise 1s ease-in-out infinite alternate;
+            animation-play-state: running;
+            will-change: transform;
+        }
+
+        .wave-bar.paused {
+            animation-play-state: paused !important;
+            height: 5px !important;
+        }
+
+        .wave-bar:nth-child(1) { height: 15px; animation-delay: 0.1s; }
+        .wave-bar:nth-child(2) { height: 35px; animation-delay: 0.3s; }
+        .wave-bar:nth-child(3) { height: 20px; animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { height: 45px; animation-delay: 0.5s; }
+        .wave-bar:nth-child(5) { height: 25px; animation-delay: 0.4s; }
+        .wave-bar:nth-child(6) { height: 30px; animation-delay: 0.6s; }
+        .wave-bar:nth-child(7) { height: 12px; animation-delay: 0.2s; }
+
+        @keyframes wave-rise {
+            0% { transform: scaleY(0.2); }
+            100% { transform: scaleY(1); }
+        }
+
+        /* Mockup Interactive Buttons */
+        .mock-btn {
+            font-size: 0.75rem;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+            user-select: none;
+        }
+
+        .mock-btn:hover {
+            transform: scale(1.03);
+        }
+
+        .mock-btn-active {
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            color: #ffffff;
+            box-shadow: 0 0 12px rgba(168, 85, 247, 0.45);
+        }
+
+        .mock-btn-inactive {
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .mock-btn-inactive:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-light);
+        }
+
+        /* Playlist item box mockup */
+        .playlist-mockbox {
+            height: 125px;
+            border: 1px solid rgba(255,255,255,0.04);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 10px;
+            font-size: 0.75rem;
+            font-family: Consolas, monospace;
+            overflow-y: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .playlist-mockitem {
+            padding: 4px 8px;
+            border-radius: 4px;
+            background: rgba(255,255,255,0.02);
+            color: var(--text-muted);
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .playlist-mockitem.active {
+            background: rgba(168, 85, 247, 0.15);
+            color: #d8b4fe;
+            font-weight: bold;
+            border-left: 2px solid var(--accent-blue);
+        }
+
+        /* Features Section - Centered and Symmetric */
+        .features-section {
+            padding: 100px 8%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 75px;
+        }
+
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 50%, #ff7a00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 122, 0, 0.25);
+        }
+
+        .section-subtitle {
+            color: #d1d5db;
+            font-size: 1.2rem;
+            max-width: 650px;
+            margin: 0 auto;
+            font-weight: 300;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 35px;
+            justify-content: center;
+        }
+
+        .feature-card {
+            background-color: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 16px;
+            padding: 40px 35px;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 1.5px;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), transparent 40%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(168, 85, 247, 0.35);
+            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            font-size: 2.4rem;
+            margin-bottom: 25px;
+            color: var(--accent-blue);
+            text-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .feature-card h3 {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.45rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            color: #f9fafb;
+        }
+
+        .feature-card p {
+            color: #d1d5db;
+            font-size: 0.98rem;
+            line-height: 1.65;
+        }
+
+        /* Tech Details / Architecture specs with high-fidelity grid - Symmetric & Centered */
+        .tech-details {
+            padding: 100px 8%;
+            background: rgba(5, 3, 8, 0.5);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+        }
+
+        .tech-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 80px;
+            justify-content: center;
+        }
+
+        .tech-left {
+            flex: 1.2;
+        }
+
+        .tech-right {
+            flex: 0.8;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+            position: relative;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+
+        .tech-tag {
+            background: rgba(255, 122, 0, 0.08);
+            color: var(--accent-green);
+            border: 1px solid rgba(255, 122, 0, 0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: inline-block;
+            margin-bottom: 25px;
+            box-shadow: 0 0 10px rgba(255, 122, 0, 0.15);
+        }
+
+        .tech-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.6rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            background: linear-gradient(135deg, #fff 60%, #ff7a00 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* High-End interactive Table Styling */
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+
+        .tech-table td {
+            padding: 15px 18px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .tech-table tr:hover td {
+            color: var(--accent-blue);
+            background: rgba(168, 85, 247, 0.04);
+            border-bottom-color: rgba(168, 85, 247, 0.25);
+        }
+
+        .tech-table td:first-child {
+            font-weight: 700;
+            color: var(--text-light);
+            width: 35%;
+        }
+
+        .tech-table td:last-child {
+            color: #d1d5db;
+        }
+
+        /* Footer design centered with LiebeBlack author emphasis */
+        footer {
+            text-align: center;
+            padding: 60px 8% 50px;
+            color: var(--text-muted);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.9rem;
+            position: relative;
+            background: rgba(5, 3, 8, 0.98);
+        }
+
+        footer strong {
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(168,85,247,0.3);
+        }
+
+        .footer-logo {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: 3px;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .hero-title {
+                font-size: 3rem;
+            }
+            .grid-mockup {
+                grid-template-columns: 1fr;
+                height: auto;
+                gap: 20px;
+            }
+            .panel-mockup {
+                height: 250px;
+            }
+            .tech-container {
+                flex-direction: column;
+                gap: 50px;
+            }
+            header {
+                padding: 20px 5%;
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Dynamic Graphic background floating orbs -->
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+
+    <!-- Header Navigation Section -->
+    <header>
+        <div class="logo-container">
+            <span class="logo-text">S.M.A.C. STATION</span>
+        </div>
+        <nav>
+            <span class="author-badge">
+                <span class="pulsing-green-dot"></span>
+                Lead Architect: LiebeBlack
+            </span>
+        </nav>
+    </header>
+
+    <!-- Hero Intro Section (Centered Contents) -->
+    <section class="hero">
+        
+        <!-- Highly Sleek operational active development banner with heartbeat -->
+        <div class="dev-banner">
+            <span class="dev-banner-badge">PROYECTO EN DESARROLLO</span>
+            <span class="dev-banner-text">Módulos DSP y Mezcla en fase de optimización continua</span>
+        </div>
+
+        <span class="hero-pretitle">Consola de Emisión & Master DSP</span>
+        <h1 class="hero-title">Estación De Control Máster Y Emisión Paramétrica</h1>
+        <p class="hero-desc">Una cabina digital inteligente dotada de telemetría de hardware en tiempo real, ecualizador paramétrico rack DSP y sincronización de locución automática.</p>
+        <div class="hero-btns">
+            <a href="https://github.com/LiebeBlack/smac_station" class="btn btn-primary" target="_blank">Ver Repositorio</a>
+            <a href="#features" class="btn btn-secondary">Explorar Consola</a>
+        </div>
+    </section>
+
+    <!-- Cockpit Interactive Mockup Representation (FULLY DYNAMIC AND ALIVE) -->
+    <div class="dashboard-showcase">
+        <div class="showcase-header">
+            <div class="dots">
+                <span class="dot dot-red"></span>
+                <span class="dot dot-yellow"></span>
+                <span class="dot dot-green"></span>
+            </div>
+            <div class="showcase-title">S.M.A.C. ACTIVE SIMULATOR (DRAG RACK SLIDERS & CLICK PLAY)</div>
+            <div></div>
+        </div>
+        <div class="grid-mockup">
+            <!-- Left Deck -->
+            <div class="panel-mockup">
+                <span class="panel-title">REPRODUCTOR Y PLAYLIST</span>
+                <div class="playlist-mockbox">
+                    <div class="playlist-mockitem active" id="track-1">
+                        <span>01. Cortina Emisión Principal.mp3</span>
+                        <span>ACTIVO</span>
+                    </div>
+                    <div class="playlist-mockitem" id="track-2">
+                        <span>02. Jingle Identidad Estación.mp3</span>
+                        <span>00:30</span>
+                    </div>
+                    <div class="playlist-mockitem" id="track-3">
+                        <span>03. Background Instrumental.wav</span>
+                        <span>02:15</span>
+                    </div>
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span>Volumen Canal Cortina</span>
+                        <span class="slider-val" id="vol-val">80%</span>
+                    </div>
+                    <input type="range" class="interactive-range" id="vol-slider" min="0" max="100" value="80">
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="mock-btn mock-btn-active" id="play-btn" style="flex: 1;">PLAY</div>
+                    <div class="mock-btn mock-btn-inactive" id="pause-btn" style="flex: 1;">PAUSE</div>
+                </div>
+            </div>
+            <!-- Center Deck (Real-time pulses & CSS wave bars synced with play/pause) -->
+            <div class="panel-mockup">
+                <span class="panel-title" style="color: var(--accent-blue);">MONITOR DE SEÑAL Y VU METERS</span>
+                <div style="text-align: center; margin: 5px 0;">
+                    <span style="font-family: Consolas, monospace; font-size: 2.4rem; color: var(--accent-blue); font-weight: bold; text-shadow: 0 0 15px rgba(168,85,247,0.4);" id="digital-clock">00:00:00</span>
+                </div>
+                
+                <!-- Simulated Dynamic Soundwave -->
+                <div class="wave-container" id="soundwave">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+                
+                <div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px; display: flex; justify-content: space-between;">
+                        <span>STEREO L</span><span id="lbl-vu-l">65%</span>
+                    </div>
+                    <div class="meter-line"><div class="meter-fill-l" id="vu-l"></div></div>
+                    <div style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 2px; display: flex; justify-content: space-between;">
+                        <span>STEREO R</span><span id="lbl-vu-r">72%</span>
+                    </div>
+                    <div class="meter-line"><div class="meter-fill-r" id="vu-r"></div></div>
+                </div>
+            </div>
+            <!-- Right Deck (Interactive Equalizer & Gate faders) -->
+            <div class="panel-mockup">
+                <span class="panel-title" style="color: var(--accent-green);">RACK DSP Y EQ</span>
+                <div>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>SUB (80Hz)</span>
+                            <span class="slider-val" id="sub-val">+3.0 dB</span>
+                        </div>
+                        <input type="range" class="interactive-range" id="sub-slider" min="-12" max="12" value="3" step="0.5">
+                    </div>
+                    <div class="slider-group">
+                        <div class="slider-label">
+                            <span>HIGH (10kHz)</span>
+                            <span class="slider-val" id="high-val">-2.5 dB</span>
+                        </div>
+                        <input type="range" class="interactive-range" id="high-slider" min="-12" max="12" value="-2.5" step="0.5">
+                    </div>
+                </div>
+                <div class="slider-group" style="margin-bottom: 0;">
+                    <div class="slider-label">
+                        <span>Noise Gate (dB)</span>
+                        <span class="slider-val" id="gate-val">-45 dB</span>
+                    </div>
+                    <input type="range" class="interactive-range" id="gate-slider" min="-60" max="0" value="-45" style="background: rgba(255, 122, 0, 0.15);">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Features Section (Symmetric grid) -->
+    <section class="features-section" id="features">
+        <div class="section-header">
+            <h2 class="section-title">Ingeniería de Radio al Límite</h2>
+            <p class="section-subtitle">Diseño robusto y acoplamiento en tiempo real para emisiones de alta norma operativa.</p>
+        </div>
+        <div class="features-grid">
+            <!-- Card 1 -->
+            <div class="feature-card">
+                <div class="feature-icon">🎚️</div>
+                <h3>Ducking de Alta Fidelidad</h3>
+                <p>Atenuación automática y matemática de música de fondo durante locuciones de voz, configurado con un filtro dinámico absoluto sin sobrecargas.</p>
+            </div>
+            <!-- Card 2 -->
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>VU Metros Estéreo Reales</h3>
+                <p>Visualización de espectro multi-canal L/R independiente y sensible a picos con cambios de color automáticos (Verde, Naranja, Rojo).</p>
+            </div>
+            <!-- Card 3 -->
+            <div class="feature-card">
+                <div class="feature-icon">🔄</div>
+                <h3>Sincronización en Caliente</h3>
+                <p>Las bandas de ecualización y fader de transición del frontend sincronizan instantáneamente los parámetros de modulación y velocidad TTS del backend.</p>
+            </div>
+            <!-- Card 4 -->
+            <div class="feature-card">
+                <div class="feature-icon">💾</div>
+                <h3>Historial SQLite Integrado</h3>
+                <p>Archivado automático de boletines máster y scripts en una base de datos local rápida, con ventana de recuperación y foco protegido.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tech Specs Section (Centered specs container) -->
+    <section class="tech-details">
+        <div class="tech-container">
+            <div class="tech-left">
+                <span class="tech-tag">Especificaciones</span>
+                <h2 class="tech-title">Construcción y DSP de la Cabina</h2>
+                <p style="color: var(--text-muted); margin-bottom: 10px;">El software cuenta con un compilador integrado para Windows que permite empaquetar todo el sistema de audio, librerías complejas y DLLs en un ejecutable portátil autónomo.</p>
+                <table class="tech-table">
+                    <tr>
+                        <td>Ecualizador Rack</td>
+                        <td>Paramétrico activo, filtros Butterworth de orden 2, corte variable</td>
+                    </tr>
+                    <tr>
+                        <td>Latencia de Mezcla</td>
+                        <td>Ultra-baja latencia en búfer circular (< 20ms de retardo en DSP)</td>
+                    </tr>
+                    <tr>
+                        <td>Compresión de Voz</td>
+                        <td>Puerta de ruido integrada (-60dB a 0dB) y normalizador RMS</td>
+                    </tr>
+                    <tr>
+                        <td>Bases de Datos</td>
+                        <td>SQLite3 relacional estructurada con índices binarios rápidos</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="tech-right">
+                <h3 style="font-family: 'Space Grotesk', sans-serif; margin-bottom: 20px;">Dependencias de Arquitectura</h3>
+                <div style="font-family: Consolas, monospace; font-size: 0.85rem; color: #a5b4fc; background: #07090e; padding: 20px; border-radius: 6px; border: 1px solid rgba(255,255,255,0.05);">
+                    customtkinter == 5.2.2<br>
+                    pygame-ce >= 2.5.0<br>
+                    pydub == 0.25.1<br>
+                    sounddevice >= 0.4.6<br>
+                    soundfile >= 0.12.1<br>
+                    librosa >= 0.10.0
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer>
+        <div class="footer-logo">S.M.A.C. BROADCAST SYSTEM</div>
+        <p>© 2026. Diseñado y Desarrollado bajo la autoría técnica de <strong>LiebeBlack</strong>.</p>
+        <p style="font-size: 0.8rem; margin-top: 10px; color: rgba(255,255,255,0.25);">Todos los derechos reservados. Distribución autorizada.</p>
+    </footer>
+
+    <!-- Interactive Simulator Logic (Pure JavaScript) -->
+    <script>
+        // Copy, Paste, Cut & Inspect contextmenu LOCK down
+        document.addEventListener('copy', (e) => e.preventDefault());
+        document.addEventListener('cut', (e) => e.preventDefault());
+        document.addEventListener('paste', (e) => e.preventDefault());
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Real-Time clock loop
+        function updateClock() {
+            const now = new Date();
+            const hrs = String(now.getHours()).padStart(2, '0');
+            const mins = String(now.getMinutes()).padStart(2, '0');
+            const secs = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('digital-clock').innerText = `${hrs}:${mins}:${secs}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Sliders & Telemetry Live Sync Loops
+        const volSlider = document.getElementById('vol-slider');
+        const volVal = document.getElementById('vol-val');
+        volSlider.addEventListener('input', (e) => {
+            volVal.innerText = `${e.target.value}%`;
+            const factor = e.target.value / 100;
+            updateVUMeters(factor);
+        });
+
+        const subSlider = document.getElementById('sub-slider');
+        const subVal = document.getElementById('sub-val');
+        subSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            subVal.innerText = (val >= 0 ? '+' : '') + val.toFixed(1) + ' dB';
+        });
+
+        const highSlider = document.getElementById('high-slider');
+        const highVal = document.getElementById('high-val');
+        highSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            highVal.innerText = (val >= 0 ? '+' : '') + val.toFixed(1) + ' dB';
+        });
+
+        const gateSlider = document.getElementById('gate-slider');
+        const gateVal = document.getElementById('gate-val');
+        gateSlider.addEventListener('input', (e) => {
+            gateVal.innerText = `${e.target.value} dB`;
+        });
+
+        // Transport Controls Play/Pause toggle logic
+        const playBtn = document.getElementById('play-btn');
+        const pauseBtn = document.getElementById('pause-btn');
+        const soundwave = document.getElementById('soundwave');
+        const waveBars = document.querySelectorAll('.wave-bar');
+
+        let isPlaying = true;
+
+        playBtn.addEventListener('click', () => {
+            if (!isPlaying) {
+                isPlaying = true;
+                playBtn.className = "mock-btn mock-btn-active";
+                pauseBtn.className = "mock-btn mock-btn-inactive";
+                waveBars.forEach(bar => bar.classList.remove('paused'));
+                updateVUMeters(volSlider.value / 100);
+            }
+        });
+
+        pauseBtn.addEventListener('click', () => {
+            if (isPlaying) {
+                isPlaying = false;
+                playBtn.className = "mock-btn mock-btn-inactive";
+                pauseBtn.className = "mock-btn mock-btn-active";
+                waveBars.forEach(bar => bar.classList.add('paused'));
+                document.getElementById('vu-l').style.width = '3%';
+                document.getElementById('vu-r').style.width = '2%';
+                document.getElementById('lbl-vu-l').innerText = '3%';
+                document.getElementById('lbl-vu-r').innerText = '2%';
+            }
+        });
+
+        // Simulating organic fluctuation in VU meters
+        function updateVUMeters(volumeFactor = 0.8) {
+            if (!isPlaying) return;
+            const varianceL = (Math.random() * 15 - 7.5); // +-7.5%
+            const varianceR = (Math.random() * 15 - 7.5);
+            
+            let lPercent = Math.max(10, Math.min(100, Math.round(volumeFactor * 78 + varianceL)));
+            let rPercent = Math.max(10, Math.min(100, Math.round(volumeFactor * 84 + varianceR)));
+
+            document.getElementById('vu-l').style.width = `${lPercent}%`;
+            document.getElementById('vu-r').style.width = `${rPercent}%`;
+            document.getElementById('lbl-vu-l').innerText = `${lPercent}%`;
+            document.getElementById('lbl-vu-r').innerText = `${rPercent}%`;
+        }
+
+        // Run dynamic meter fluctuation every 250ms
+        setInterval(() => {
+            if (isPlaying) {
+                updateVUMeters(volSlider.value / 100);
+            }
+        }, 250);
+    </script>
+</body>
+</html>
