@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Base de datos
+*.db
+*.sqlite
+*.sqlite3
+smac_station.db
+
+# Archivos de audio generados
+*.wav
+*.mp3
+!assets/audio/cortinas/*.mp3
+!assets/audio/cortinas/*.wav
+boletin_salida.wav
+temp_voz.wav
+
+# Archivos temporales
+*.tmp
+*.temp
+temp_*
+
+# Logs
+*.log
+logs/
+
+# Configuración local (si hay overrides)
+config_local.py

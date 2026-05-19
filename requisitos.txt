@@ -1,0 +1,16 @@
+# Dependencias Principales
+customtkinter==5.2.2
+pydub==0.25.1
+pyttsx3==2.90
+pygame-ce>=2.5.0
+
+# Motores TTS Premium
+gTTS>=2.5.0
+
+# Backends de Procesamiento y Grabación Avanzados
+sounddevice>=0.4.6
+soundfile>=0.12.1
+librosa>=0.10.0
+
+# Utilidades del Sistema
+psutil>=5.9.0
