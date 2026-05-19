@@ -9,6 +9,65 @@ import sys
 import signal
 from typing import Optional, Dict, List, Tuple
 
+# =====================================================================
+# REPARACIÓN DE RUTAS DLL PARA WINDOWS (Evita "DLL load failed")
+# =====================================================================
+if sys.platform == 'win32' and hasattr(os, 'add_dll_directory'):
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    try:
+        os.add_dll_directory(base_dir)
+    except:
+        pass
+        
+    internal_dir = os.path.join(base_dir, "_internal")
+    if os.path.exists(internal_dir):
+        try:
+            os.add_dll_directory(internal_dir)
+        except:
+            pass
+            
+    try:
+        import site
+        site_dirs = []
+        if hasattr(site, 'getsitepackages'):
+            site_dirs.extend(site.getsitepackages())
+        if hasattr(site, 'getusersitepackages'):
+            site_dirs.append(site.getusersitepackages())
+            
+        for path in site_dirs:
+            if os.path.exists(path):
+                tbb_path = os.path.join(path, "tbb")
+                if os.path.exists(tbb_path):
+                    try: os.add_dll_directory(tbb_path) 
+                    except: pass
+                    tbb_bin = os.path.join(tbb_path, "bin")
+                    if os.path.exists(tbb_bin):
+                        try: os.add_dll_directory(tbb_bin)
+                        except: pass
+                sf_path = os.path.join(path, "soundfile")
+                if os.path.exists(sf_path):
+                    try: os.add_dll_directory(sf_path)
+                    except: pass
+                llvm_path = os.path.join(path, "llvmlite", "binding")
+                if os.path.exists(llvm_path):
+                    try: os.add_dll_directory(llvm_path)
+                    except: pass
+    except Exception as e:
+        pass
+
+    lib_bin = os.path.join(sys.prefix, "Library", "bin")
+    if os.path.exists(lib_bin):
+        try:
+            os.add_dll_directory(lib_bin)
+        except:
+            pass
+            
+    try:
+        os.add_dll_directory(os.path.dirname(sys.executable))
+    except:
+        pass
+# =====================================================================
+
 class SystemCompatibility:
     """Gestiona la compatibilidad del sistema y proporciona fallbacks."""
     

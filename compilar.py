@@ -122,22 +122,31 @@ def compilar():
         
         dst_dir = os.path.abspath(f"dist/{nombre_app}")
         
+        # Helper to copy files to both dst_dir and its _internal subdirectory if it exists
+        def safe_copy_file(src, filename):
+            # Copiar a la raíz del dist
+            dst_root = os.path.join(dst_dir, filename)
+            shutil.copy2(src, dst_root)
+            # Copiar a _internal si existe
+            internal_dir = os.path.join(dst_dir, "_internal")
+            if os.path.exists(internal_dir) and os.path.isdir(internal_dir):
+                dst_internal = os.path.join(internal_dir, filename)
+                shutil.copy2(src, dst_internal)
+
         # A. RESOLVER FÍSICAMENTE 'python314.dll'
         try:
             dll_name = f"python{sys.version_info.major}{sys.version_info.minor}.dll"
             src_dll = os.path.join(sys.base_prefix, dll_name)
-            dst_dll = os.path.join(dst_dir, dll_name)
             
             if os.path.exists(src_dll) and os.path.exists(dst_dir):
-                if not os.path.exists(dst_dll):
-                    log_msg(f"Físicamente reparado: Copiando {dll_name} al directorio de salida...", "⚙️")
-                    shutil.copy2(src_dll, dst_dll)
-                    log_msg("DLL de Python copiado con éxito.", "✅")
+                log_msg(f"Físicamente reparado: Copiando {dll_name} al directorio de salida y _internal...", "⚙️")
+                safe_copy_file(src_dll, dll_name)
+                log_msg("DLL de Python copiado con éxito.", "✅")
             else:
                 src_sys32 = os.path.join("C:\\Windows\\System32", dll_name)
-                if os.path.exists(src_sys32) and os.path.exists(dst_dir) and not os.path.exists(dst_dll):
+                if os.path.exists(src_sys32) and os.path.exists(dst_dir):
                     log_msg(f"Físicamente reparado: Copiando {dll_name} desde System32...", "⚙️")
-                    shutil.copy2(src_sys32, dst_dll)
+                    safe_copy_file(src_sys32, dll_name)
                     log_msg("DLL de Python copiado con éxito.", "✅")
         except Exception as dll_err:
             log_msg(f"Aviso en verificación de Python DLL: {dll_err}", "⚠️")
@@ -146,38 +155,46 @@ def compilar():
         try:
             tbb_dll_found = False
             
-            # Buscar directamente en el sistema de archivos (sys.path) para evitar cacheo de importaciones
-            for path in sys.path:
-                tbb_dir = os.path.join(path, "tbb")
-                if os.path.exists(tbb_dir) and os.path.isdir(tbb_dir):
-                    for root, dirs, files in os.walk(tbb_dir):
-                        if "tbb12.dll" in files:
-                            src_tbb = os.path.join(root, "tbb12.dll")
-                            dst_tbb = os.path.join(dst_dir, "tbb12.dll")
-                            shutil.copy2(src_tbb, dst_tbb)
-                            log_msg(f"Físicamente reparado: tbb12.dll copiado desde {src_tbb}", "✅")
-                            tbb_dll_found = True
-                            break
-                if tbb_dll_found:
-                    break
+            # Buscar recursivamente en todo site-packages (donde customtkinter está instalado)
+            site_packages_dir = os.path.dirname(ctk_dir)
+            if os.path.exists(site_packages_dir) and os.path.isdir(site_packages_dir):
+                for root, dirs, files in os.walk(site_packages_dir):
+                    # 1. Intentar encontrar coincidencia exacta tbb12.dll
+                    if "tbb12.dll" in files:
+                        src_tbb = os.path.join(root, "tbb12.dll")
+                        safe_copy_file(src_tbb, "tbb12.dll")
+                        log_msg(f"Físicamente reparado: tbb12.dll copiado desde {src_tbb}", "✅")
+                        tbb_dll_found = True
+                        break
             
-            # Plan de respaldo: Importar recargando caché si no se halló por disco
-            if not tbb_dll_found:
-                try:
-                    import importlib
-                    importlib.invalidate_caches()
-                    import tbb
-                    tbb_base = os.path.dirname(tbb.__file__)
-                    for root, dirs, files in os.walk(tbb_base):
-                        if "tbb12.dll" in files:
-                            src_tbb = os.path.join(root, "tbb12.dll")
-                            dst_tbb = os.path.join(dst_dir, "tbb12.dll")
-                            shutil.copy2(src_tbb, dst_tbb)
-                            log_msg(f"Físicamente reparado (vía import): tbb12.dll copiado desde {src_tbb}", "✅")
+            # Plan de respaldo 2: Buscar cualquier dll que empiece con tbb en site-packages y copiarla como tbb12.dll
+            if not tbb_dll_found and os.path.exists(site_packages_dir):
+                for root, dirs, files in os.walk(site_packages_dir):
+                    for f in files:
+                        if f.lower().startswith("tbb") and f.lower().endswith(".dll"):
+                            src_tbb = os.path.join(root, f)
+                            safe_copy_file(src_tbb, "tbb12.dll")
+                            safe_copy_file(src_tbb, f) # También copiar con su nombre original
+                            log_msg(f"Físicamente reparado (respaldo): {f} copiado como tbb12.dll desde {src_tbb}", "✅")
                             tbb_dll_found = True
                             break
-                except ImportError:
-                    pass
+                    if tbb_dll_found:
+                        break
+
+            # Plan de respaldo 3: Buscar en la carpeta del Python ejecutable o DLLs de Python
+            if not tbb_dll_found:
+                py_dir = os.path.dirname(sys.executable)
+                for root, dirs, files in os.walk(py_dir):
+                    for f in files:
+                        if f.lower().startswith("tbb") and f.lower().endswith(".dll"):
+                            src_tbb = os.path.join(root, f)
+                            safe_copy_file(src_tbb, "tbb12.dll")
+                            safe_copy_file(src_tbb, f)
+                            log_msg(f"Físicamente reparado (Python dir): {f} copiado como tbb12.dll desde {src_tbb}", "✅")
+                            tbb_dll_found = True
+                            break
+                    if tbb_dll_found:
+                        break
             
             if not tbb_dll_found:
                 log_msg("No se localizó tbb12.dll en la carpeta del módulo 'tbb' ni en el sistema.", "⚠️")
@@ -191,8 +208,8 @@ def compilar():
             if os.path.exists(ffmpeg_exe):
                 # Copiar a la raíz para ejecución de desarrollo
                 shutil.copy2(ffmpeg_exe, os.path.join(os.getcwd(), "ffmpeg.exe"))
-                # Copiar al dist para producción
-                shutil.copy2(ffmpeg_exe, os.path.join(dst_dir, "ffmpeg.exe"))
+                # Copiar al dist para producción y _internal
+                safe_copy_file(ffmpeg_exe, "ffmpeg.exe")
                 
                 # También resolver ffprobe.exe (suele estar al lado de ffmpeg en imageio-ffmpeg)
                 ffmpeg_dir = os.path.dirname(ffmpeg_exe)
@@ -206,9 +223,9 @@ def compilar():
                 
                 if os.path.exists(ffprobe_exe):
                     shutil.copy2(ffprobe_exe, os.path.join(os.getcwd(), "ffprobe.exe"))
-                    shutil.copy2(ffprobe_exe, os.path.join(dst_dir, "ffprobe.exe"))
+                    safe_copy_file(ffprobe_exe, "ffprobe.exe")
                 
-                log_msg("Físicamente reparado: FFmpeg y FFprobe binarios estáticos copiados a raíz y dist/", "✅")
+                log_msg("Físicamente reparado: FFmpeg y FFprobe binarios estáticos copiados a raíz, dist/ y _internal/", "✅")
         except Exception as ffmpeg_err:
             log_msg(f"No se pudo resolver físicamente FFmpeg: {ffmpeg_err}", "⚠️")
 
