@@ -28,7 +28,32 @@ class DatabaseConnection:
                 fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS configuraciones (
+                clave TEXT PRIMARY KEY,
+                valor TEXT NOT NULL
+            )
+        """)
         self.connection.commit()
+
+    def guardar_configuracion(self, clave: str, valor: str):
+        """Guarda o actualiza un valor de configuración."""
+        cursor = self.connection.cursor()
+        cursor.execute(
+            "INSERT OR REPLACE INTO configuraciones (clave, valor) VALUES (?, ?)",
+            (clave, str(valor))
+        )
+        self.connection.commit()
+
+    def obtener_configuracion(self, clave: str, default: str = None) -> Optional[str]:
+        """Obtiene un valor de configuración de la base de datos."""
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT valor FROM configuraciones WHERE clave = ?", (clave,))
+            row = cursor.fetchone()
+            return row[0] if row else default
+        except:
+            return default
     
     def guardar_boletin(self, texto: str, ruta_audio: str) -> int:
         """Guarda un boletín en la base de datos."""

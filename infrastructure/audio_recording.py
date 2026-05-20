@@ -108,6 +108,12 @@ class AudioRecordingFallback:
     def is_recording(self) -> bool:
         """Verifica si está grabando."""
         return self.recording
+        
+    def get_last_amplitude(self) -> float:
+        """Retorna la última amplitud capturada del micrófono en tiempo real."""
+        if self.recording and self.current_backend and hasattr(self.current_backend, 'last_amplitude'):
+            return self.current_backend.last_amplitude
+        return 0.0
     
     def close(self):
         """Cierra todos los backends."""
@@ -135,6 +141,7 @@ class PyAudioRecorder:
         self.output_file = None
         self.recording_thread = None
         self.should_record = False
+        self.last_amplitude = 0.0
     
     def get_input_devices(self) -> List[dict]:
         """Retorna dispositivos de entrada disponibles."""
@@ -156,10 +163,15 @@ class PyAudioRecorder:
     
     def _record_frames(self):
         """Captura frames de audio en un thread separado."""
+        import numpy as np
         while self.should_record and self.stream and self.stream.is_active():
             try:
                 data = self.stream.read(1024)
                 self.frames.append(data)
+                if len(data) > 0:
+                    samples = np.frombuffer(data, dtype=np.int16)
+                    if len(samples) > 0:
+                        self.last_amplitude = float(np.sqrt(np.mean(samples.astype(np.float32)**2)) / 32768.0)
             except:
                 break
     
@@ -232,6 +244,7 @@ class SoundDeviceRecorder:
         self.sf = sf
         self.recording = None
         self.output_file = None
+        self.last_amplitude = 0.0
     
     def get_input_devices(self) -> List[dict]:
         """Retorna dispositivos de entrada disponibles."""
@@ -262,6 +275,9 @@ class SoundDeviceRecorder:
             if status:
                 pass
             self.sf_file.write(indata.copy())
+            import numpy as np
+            if len(indata) > 0:
+                self.last_amplitude = float(np.sqrt(np.mean(indata**2)))
             
         self.stream = self.sd.InputStream(samplerate=sample_rate, device=device_index,
                                           channels=channels, callback=callback)
@@ -296,6 +312,7 @@ class PyAudioWaveRecorder:
         self.output_file = None
         self.recording_thread = None
         self.should_record = False
+        self.last_amplitude = 0.0
     
     def get_input_devices(self) -> List[dict]:
         """Retorna dispositivos de entrada disponibles."""
@@ -317,10 +334,15 @@ class PyAudioWaveRecorder:
     
     def _record_frames(self):
         """Captura frames de audio en un thread separado."""
+        import numpy as np
         while self.should_record and self.stream and self.stream.is_active():
             try:
                 data = self.stream.read(1024)
                 self.frames.append(data)
+                if len(data) > 0:
+                    samples = np.frombuffer(data, dtype=np.int16)
+                    if len(samples) > 0:
+                        self.last_amplitude = float(np.sqrt(np.mean(samples.astype(np.float32)**2)) / 32768.0)
             except:
                 break
     

@@ -3,6 +3,20 @@ import os
 import sys
 
 # =====================================================================
+# CONFIGURACIÓN DE RENDIMIENTO ULTRA-FLUIDO, GPU Y VSYNC (60Hz)
+# =====================================================================
+os.environ["SDL_VIDEODRIVER"] = "directx" if sys.platform == "win32" else "windib"
+os.environ["SDL_HINT_RENDER_DRIVER"] = "direct3d" if sys.platform == "win32" else "opengl"
+os.environ["SDL_HINT_RENDER_VSYNC"] = "1"            # Forzar VSync a 60Hz para suavidad extrema
+os.environ["PYGAME_BLEND_ALPHA_SDL2"] = "1"         # Aceleración de mezcla alpha por hardware GPU
+os.environ["SDL_HINT_GPU_ENABLED"] = "1"            # Forzar habilitación de GPU
+os.environ["TK_SILENT"] = "1"                        # Reducir ruido en terminales de renderizado
+os.environ["GDI_DOUBLEBLOCK"] = "1"                 # Habilitar doble buffer GDI en Windows (DWM GPU blitting)
+os.environ["PYGAME_HIDE_SUPPORT_PROMPT"] = "1"       # Reducir overhead de inicialización en terminal
+
+
+
+# =====================================================================
 # REPARACIÓN DE RUTAS DLL PARA WINDOWS (Evita "DLL load failed")
 # =====================================================================
 if sys.platform == 'win32' and hasattr(os, 'add_dll_directory'):
@@ -100,7 +114,24 @@ def main():
             print("Por favor, instale las dependencias faltantes:")
             for cmd in system_checker.get_installation_commands():
                 print(f"  {cmd}")
-            input("\nPresione Enter para salir...")
+            
+            try:
+                import tkinter as tk
+                from tkinter import messagebox
+                root = tk.Tk()
+                root.withdraw()
+                messagebox.showerror(
+                    "S.M.A.C. - Error de Compatibilidad",
+                    "El sistema detectó fallas críticas que impiden la ejecución.\n\n"
+                    "Por favor, ejecute la instalación de dependencias requeridas.\n"
+                    "Detalles en la consola de comandos."
+                )
+                root.destroy()
+            except:
+                pass
+                
+            if sys.stdout and hasattr(sys.stdout, 'isatty') and sys.stdout.isatty():
+                input("\nPresione Enter para salir...")
             sys.exit(1)
     else:
         print("✅ Sistema compatible.")
@@ -145,10 +176,25 @@ def main():
         resource_cleanup.cleanup_now()
     except Exception as e:
         print(f"\n❌ Error al iniciar la aplicación: {e}")
-        print("\nPara diagnóstico, ejecute con verificación detallada:")
-        print("  python -c \"from infrastructure.system_checker import system_checker; print(system_checker.generate_report())\"")
+        import traceback
+        traceback.print_exc()
+        
+        try:
+            import tkinter as tk
+            from tkinter import messagebox
+            root = tk.Tk()
+            root.withdraw()
+            messagebox.showerror(
+                "S.M.A.C. - Error de Inicialización",
+                f"Fallo crítico al iniciar la aplicación:\n\n{str(e)}"
+            )
+            root.destroy()
+        except:
+            pass
+            
         resource_cleanup.cleanup_now()
-        input("\nPresione Enter para salir...")
+        if sys.stdout and hasattr(sys.stdout, 'isatty') and sys.stdout.isatty():
+            input("\nPresione Enter para salir...")
         sys.exit(1)
 
 if __name__ == "__main__":

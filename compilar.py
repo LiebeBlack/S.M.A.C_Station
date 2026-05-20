@@ -62,6 +62,42 @@ def compilar():
         except Exception as e:
             log_msg(f"Fallo al instalar imageio-ffmpeg: {e}", "❌")
 
+    # 4b. Instalar y verificar 'Pillow' (PIL) requerido por CustomTkinter
+    try:
+        import PIL
+        log_msg("Pillow (PIL) detectado con éxito.", "✅")
+    except ImportError:
+        log_msg("Pillow (PIL) no está instalado. Instalándolo de forma segura...", "⚙️")
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "Pillow"], check=True)
+            log_msg("Pillow instalado correctamente.", "✅")
+        except Exception as e:
+            log_msg(f"Fallo al instalar Pillow: {e}", "❌")
+
+    # 4c. Instalar y verificar 'pyttsx3' para TTS offline
+    try:
+        import pyttsx3
+        log_msg("pyttsx3 detectado con éxito.", "✅")
+    except ImportError:
+        log_msg("pyttsx3 no está instalado. Instalándolo de forma segura...", "⚙️")
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "pyttsx3"], check=True)
+            log_msg("pyttsx3 instalado correctamente.", "✅")
+        except Exception as e:
+            log_msg(f"Fallo al instalar pyttsx3: {e}", "❌")
+
+    # 4d. Instalar y verificar 'gtts' para TTS online
+    try:
+        import gtts
+        log_msg("gTTS detectado con éxito.", "✅")
+    except ImportError:
+        log_msg("gTTS no está instalado. Instalándolo de forma segura...", "⚙️")
+        try:
+            subprocess.run([sys.executable, "-m", "pip", "install", "gtts"], check=True)
+            log_msg("gTTS instalado correctamente.", "✅")
+        except Exception as e:
+            log_msg(f"Fallo al instalar gtts: {e}", "❌")
+
     # 5. Asegurar que exista la base de datos en la raíz
     db_file = "smac_station.db"
     if not os.path.exists(db_file):
@@ -99,10 +135,21 @@ def compilar():
         "--hidden-import=gtts",
         "--hidden-import=pydub",
         "--hidden-import=sqlite3",
+        "--hidden-import=PIL",
+        "--hidden-import=pyttsx3",
+        "--hidden-import=pyttsx3.drivers",
+        "--hidden-import=pyttsx3.drivers.sapi5",
+        "--hidden-import=pyttsx3.drivers.dummy",
+        "--hidden-import=win32com",
+        "--hidden-import=win32com.client",
+        "--hidden-import=comtypes",
     ]
 
     # Agregar carpeta de CustomTkinter a los datos empaquetados
     args.append(f'--add-data={ctk_dir};customtkinter')
+    
+    if os.path.exists("assets"):
+        args.append('--add-data=assets;assets')
     
     if os.path.exists(db_file):
         args.append(f'--add-data={db_file};.')
@@ -228,6 +275,14 @@ def compilar():
                 log_msg("Físicamente reparado: FFmpeg y FFprobe binarios estáticos copiados a raíz, dist/ y _internal/", "✅")
         except Exception as ffmpeg_err:
             log_msg(f"No se pudo resolver físicamente FFmpeg: {ffmpeg_err}", "⚠️")
+
+        # D. RESOLVER FÍSICAMENTE 'cortina_base.mp3'
+        try:
+            if os.path.exists("cortina_base.mp3"):
+                safe_copy_file("cortina_base.mp3", "cortina_base.mp3")
+                log_msg("Físicamente empaquetado: cortina_base.mp3 copiado con éxito.", "✅")
+        except Exception as cortina_err:
+            log_msg(f"No se pudo copiar la cortina base: {cortina_err}", "⚠️")
 
         log_msg("===================================================", "🎉")
         log_msg("¡COMPILACIÓN COMPLETADA EXITOSAMENTE!", "🏆")

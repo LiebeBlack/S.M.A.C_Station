@@ -11,25 +11,27 @@
     
     <style>
         :root {
-            --bg-dark: #050308;
-            --bg-card: rgba(22, 13, 35, 0.7);
-            --accent-blue: #a855f7; /* Intense Neon Purple */
-            --accent-green: #ff7a00; /* Intense Neon Orange */
-            --accent-neon-green: #00ff66; /* Vibrant Emerald Green */
+            --bg-dark: #030105;
+            --bg-card: rgba(15, 8, 25, 0.6);
+            --accent-blue: #bd00ff; /* Extremely Intense Neon Purple/Blue */
+            --accent-green: #ff3b00; /* Extremely Intense Neon Red/Orange */
+            --accent-neon-green: #00ff66; /* Hyper Emerald Green */
             --accent-orange: #ffaa00;
-            --accent-red: #ff3355;
-            --text-light: #f9fafb;
-            --text-muted: #9ca3af;
-            --border-glow: rgba(168, 85, 247, 0.35);
+            --accent-red: #ff003c;
+            --text-light: #ffffff;
+            --text-muted: #8b8d98;
+            --border-glow: rgba(189, 0, 255, 0.5);
         }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
-        /* Prevent text copy-paste entirely and establish deep purple background */
+        /* Prevent text copy-paste entirely, establish deep purple background and force GPU rendering */
         body {
             background: radial-gradient(circle at 50% -20%, #201035 0%, #030205 100%);
             color: var(--text-light);
@@ -41,7 +43,25 @@
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            transform: translateZ(0); /* Force GPU Acceleration */
+            will-change: transform;
         }
+
+        /* Subtle Minimalist Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in {
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            opacity: 0;
+            will-change: transform, opacity;
+        }
+        
+        .delay-1 { animation-delay: 0.1s; }
+        .delay-2 { animation-delay: 0.2s; }
+        .delay-3 { animation-delay: 0.3s; }
 
         body::before {
             content: '';
@@ -75,18 +95,22 @@
         .orb-1 {
             width: 520px;
             height: 520px;
-            background: radial-gradient(circle, rgba(168, 85, 247, 0.38) 0%, rgba(3, 2, 5, 0) 70%);
+            background: radial-gradient(circle, var(--accent-blue) 0%, rgba(3, 2, 5, 0) 65%);
             top: -100px;
             left: 15%;
+            opacity: 0.35;
+            filter: blur(160px);
         }
 
         .orb-2 {
             width: 650px;
             height: 650px;
-            background: radial-gradient(circle, rgba(255, 122, 0, 0.25) 0%, rgba(3, 2, 5, 0) 70%);
-            top: 30%;
-            right: -50px;
-            animation-delay: -4s;
+            background: radial-gradient(circle, var(--accent-green) 0%, rgba(3, 2, 5, 0) 65%);
+            bottom: -20%;
+            right: -5%;
+            opacity: 0.35;
+            filter: blur(180px);
+            animation-delay: -5s;
         }
 
         .orb-3 {
@@ -328,18 +352,18 @@
             border-color: rgba(255, 255, 255, 0.18);
         }
 
-        /* Interactive Cockpit Container with Working JS Controls - Centered Perfectly */
+        /* Interactive Cockpit Container - Sleek & Minimalist */
         .dashboard-showcase {
-            width: 90%;
-            max-width: 1100px;
-            background: rgba(22, 13, 35, 0.45);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 16px;
-            padding: 30px;
+            width: 95%;
+            max-width: 1200px;
+            background: rgba(10, 5, 18, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: 40px;
             margin: 40px auto 120px;
-            box-shadow: 0 45px 90px rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+            box-shadow: 0 45px 100px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.1);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
             position: relative;
         }
 
@@ -393,25 +417,26 @@
         /* 3-Column Cockpit Layout representation */
         .grid-mockup {
             display: grid;
-            grid-template-columns: 3fr 4fr 3fr;
-            gap: 20px;
-            height: 380px;
+            grid-template-columns: 1fr 1.3fr 1fr;
+            gap: 25px;
         }
 
         .panel-mockup {
-            background-color: rgba(6, 3, 10, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 12px;
-            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 25px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(20px);
         }
 
         .panel-mockup:hover {
-            border-color: var(--accent-blue);
-            box-shadow: 0 0 30px rgba(168, 85, 247, 0.2);
+            border-color: rgba(189, 0, 255, 0.4);
+            box-shadow: 0 0 40px rgba(189, 0, 255, 0.15), inset 0 0 20px rgba(189, 0, 255, 0.05);
+            transform: translateY(-2px);
         }
 
         .panel-title {
@@ -426,32 +451,33 @@
             align-items: center;
         }
 
-        /* Working Interactive Sliders CSS */
+        /* Working Interactive Sliders CSS - Minimalist */
         .interactive-range {
             -webkit-appearance: none;
             width: 100%;
-            height: 5px;
+            height: 3px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
             outline: none;
-            margin: 10px 0;
-            transition: background 0.2s;
+            margin: 12px 0;
+            transition: background 0.3s;
         }
 
         .interactive-range::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
-            width: 15px;
-            height: 15px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
-            background: var(--accent-blue);
+            background: #ffffff;
             cursor: pointer;
-            box-shadow: 0 0 10px var(--accent-blue);
-            transition: transform 0.1s;
+            box-shadow: 0 0 15px var(--accent-blue), 0 0 5px #ffffff;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .interactive-range::-webkit-slider-thumb:hover {
-            transform: scale(1.25);
+            transform: scale(1.4);
+            background: var(--accent-blue);
         }
 
         .slider-group {
@@ -537,37 +563,41 @@
             100% { transform: scaleY(1); }
         }
 
-        /* Mockup Interactive Buttons */
+        /* Mockup Interactive Buttons - Elegant Pills */
         .mock-btn {
-            font-size: 0.75rem;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 10px 14px;
+            border-radius: 30px;
+            font-weight: 800;
             text-align: center;
             cursor: pointer;
-            transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
             user-select: none;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .mock-btn:hover {
-            transform: scale(1.03);
+            transform: translateY(-2px);
         }
 
         .mock-btn-active {
-            background: linear-gradient(90deg, var(--accent-blue), var(--accent-green));
+            background: linear-gradient(135deg, var(--accent-blue), #8a2be2);
             color: #ffffff;
-            box-shadow: 0 0 12px rgba(168, 85, 247, 0.45);
+            box-shadow: 0 8px 20px rgba(189, 0, 255, 0.4);
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .mock-btn-inactive {
-            background: rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.03);
             color: var(--text-muted);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .mock-btn-inactive:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.08);
             color: var(--text-light);
+            border-color: rgba(255, 255, 255, 0.3);
         }
 
         /* Playlist item box mockup */
@@ -635,41 +665,35 @@
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 35px;
+            gap: 40px;
             justify-content: center;
         }
 
         .feature-card {
-            background-color: var(--bg-card);
-            border: 1px solid rgba(255, 255, 255, 0.04);
-            border-radius: 16px;
+            background-color: rgba(10, 5, 15, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
             padding: 40px 35px;
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
         }
 
         .feature-card::before {
             content: '';
             position: absolute;
-            inset: 0;
-            border-radius: 16px;
-            padding: 1.5px;
-            background: linear-gradient(135deg, rgba(168, 85, 247, 0.4), transparent 40%);
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
+            top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent-blue), var(--accent-green), transparent);
             opacity: 0;
-            transition: opacity 0.2s ease;
-            pointer-events: none;
+            transition: opacity 0.4s ease;
         }
 
         .feature-card:hover {
-            transform: translateY(-6px);
-            border-color: rgba(168, 85, 247, 0.35);
-            box-shadow: 0 25px 50px rgba(0,0,0,0.6);
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(189, 0, 255, 0.1);
         }
 
         .feature-card:hover::before {
@@ -859,7 +883,7 @@
     </header>
 
     <!-- Hero Intro Section (Centered Contents) -->
-    <section class="hero">
+    <section class="hero animate-fade-in delay-1">
         
         <!-- Highly Sleek operational active development banner with heartbeat -->
         <div class="dev-banner">
@@ -877,7 +901,7 @@
     </section>
 
     <!-- Cockpit Interactive Mockup Representation (FULLY DYNAMIC AND ALIVE) -->
-    <div class="dashboard-showcase">
+    <div class="dashboard-showcase animate-fade-in delay-2">
         <div class="showcase-header">
             <div class="dots">
                 <span class="dot dot-red"></span>
@@ -916,6 +940,20 @@
                     <div class="mock-btn mock-btn-active" id="play-btn" style="flex: 1;">PLAY</div>
                     <div class="mock-btn mock-btn-inactive" id="pause-btn" style="flex: 1;">PAUSE</div>
                 </div>
+                <!-- Extended Left Deck: Soundboard -->
+                <div style="margin-top: 15px;">
+                    <span class="panel-title" style="color: var(--accent-blue); font-size: 0.7rem;">SOUNDBOARD EFECTOS</span>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-top: 5px;">
+                        <div class="mock-btn mock-btn-inactive" onclick="triggerSound('SIRENA')">SIRENA</div>
+                        <div class="mock-btn mock-btn-inactive" onclick="triggerSound('APLAUSOS')">APLAUSOS</div>
+                        <div class="mock-btn mock-btn-inactive" onclick="triggerSound('REDOBLE')">REDOBLE</div>
+                        <div class="mock-btn mock-btn-inactive" onclick="triggerSound('ID RADIO')">ID RADIO</div>
+                        <div class="mock-btn mock-btn-inactive" onclick="triggerSound('RISAS')">RISAS</div>
+                        <div class="mock-btn mock-btn-inactive" onclick="triggerSound('IMPACTO')">IMPACTO</div>
+                        <div class="mock-btn mock-btn-inactive" onclick="triggerSound('ALERTA')">ALERTA</div>
+                        <div class="mock-btn mock-btn-inactive" onclick="triggerSound('EFECTO 8')">EFECTO 8</div>
+                    </div>
+                </div>
             </div>
             <!-- Center Deck (Real-time pulses & CSS wave bars synced with play/pause) -->
             <div class="panel-mockup">
@@ -945,6 +983,35 @@
                     </div>
                     <div class="meter-line"><div class="meter-fill-r" id="vu-r"></div></div>
                 </div>
+                
+                <!-- Extended Center Deck: Telemetry, Editor, Mic & Actions -->
+                <div style="margin-top: 15px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; padding: 10px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-family: Consolas, monospace; font-size: 0.7rem; color: var(--text-muted);">
+                        <div style="color: var(--accent-blue);">ENGINE: STANDBY</div>
+                        <div style="color: var(--accent-neon-green);" id="telem-time">POSICIÓN: 00:00</div>
+                        <div style="color: var(--accent-orange);" id="telem-cpu">CPU LOAD: 3.5%</div>
+                        <div style="color: var(--accent-orange);">RAM LIBRE: 1.45 GB</div>
+                        <div style="grid-column: span 2;">EQ: SUB +3.0 | LOW 0.0 | MID -1.0 | HIGH -2.5</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <span class="panel-title" style="color: var(--accent-blue); font-size: 0.7rem; margin-bottom: 5px;">GUION DE LOCUCIÓN EN VIVO</span>
+                        <span style="font-size: 0.65rem; color: gray;" id="char-counter">0 caracteres</span>
+                    </div>
+                    <textarea id="live-script" style="width: 100%; height: 60px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: var(--text-light); padding: 12px; font-family: inherit; font-size: 0.8rem; resize: none; outline: none; transition: all 0.3s;" onfocus="this.style.borderColor='var(--accent-blue)'; this.style.boxShadow='0 0 15px rgba(189,0,255,0.3)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none';" placeholder="Escriba el boletín..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <div class="mock-btn mock-btn-inactive" id="mic-btn" style="flex: 1; border-color: var(--accent-red); color: var(--accent-red);" onclick="toggleMic()">🎙️ GRABAR MICRÓFONO</div>
+                    <div class="mock-btn mock-btn-inactive" id="listen-btn" style="flex: 1; opacity: 0.5; pointer-events: none;" onclick="playMicRecord()">ESCUCHAR GRABACIÓN</div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <div class="mock-btn mock-btn-active" style="flex: 2; background: linear-gradient(90deg, #aa0000, #ff0000);" onclick="mixAndTransmit()">MEZCLAR Y TRANSMITIR</div>
+                    <div class="mock-btn mock-btn-active" style="flex: 1; background: linear-gradient(90deg, #cc7a00, #ff9900);" id="talk-over-btn" onclick="toggleTalkOver()">TALK OVER</div>
+                </div>
             </div>
             <!-- Right Deck (Interactive Equalizer & Gate faders) -->
             <div class="panel-mockup">
@@ -964,6 +1031,23 @@
                         </div>
                         <input type="range" class="interactive-range" id="high-slider" min="-12" max="12" value="-2.5" step="0.5">
                     </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="slider-group" style="flex: 1;">
+                            <div class="slider-label"><span>LOW</span> <span class="slider-val" id="low-val">0.0</span></div>
+                            <input type="range" class="interactive-range" id="low-slider" min="-12" max="12" value="0" step="0.5">
+                        </div>
+                        <div class="slider-group" style="flex: 1;">
+                            <div class="slider-label"><span>MID</span> <span class="slider-val" id="mid-val">-1.0</span></div>
+                            <input type="range" class="interactive-range" id="mid-slider" min="-12" max="12" value="-1" step="0.5">
+                        </div>
+                    </div>
+                </div>
+                <div class="slider-group" style="margin-top: 5px;">
+                    <div class="slider-label">
+                        <span>Fader Transición (s)</span>
+                        <span class="slider-val" id="fade-val">3.0 s</span>
+                    </div>
+                    <input type="range" class="interactive-range" id="fade-slider" min="0" max="10" value="3" step="0.5">
                 </div>
                 <div class="slider-group" style="margin-bottom: 0;">
                     <div class="slider-label">
@@ -972,46 +1056,128 @@
                     </div>
                     <input type="range" class="interactive-range" id="gate-slider" min="-60" max="0" value="-45" style="background: rgba(255, 122, 0, 0.15);">
                 </div>
+
+                <!-- Extended Right Deck: TTS & Terminal -->
+                <div style="margin-top: 15px;">
+                    <span class="panel-title" style="color: var(--accent-blue); font-size: 0.7rem;">TEXT TO SPEECH INSTANTÁNEO</span>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="quick-tts" style="flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: var(--text-light); padding: 8px 15px; font-family: inherit; font-size: 0.75rem; outline: none; transition: all 0.3s;" onfocus="this.style.borderColor='var(--accent-blue)'; this.style.boxShadow='0 0 15px rgba(189,0,255,0.3)';" onblur="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.boxShadow='none';" placeholder="Escriba frase rápida...">
+                        <div class="mock-btn mock-btn-active" style="padding: 8px 16px; font-size: 0.7rem;" onclick="speakTTS()">EMITIR</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; flex-direction: column; flex: 1;">
+                    <span class="panel-title" style="color: var(--accent-blue); font-size: 0.7rem;">TERMINAL OPERATIVO SMAC LOGS</span>
+                    <div id="engineering-terminal" style="flex: 1; min-height: 80px; background: #020104; border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; font-family: Consolas, monospace; font-size: 0.65rem; color: #00ff00; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; position: relative; box-shadow: inset 0 0 20px rgba(0,0,0,0.8);">
+                        <!-- CRT Scanline overlay -->
+                        <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); background-size: 100% 2px, 3px 100%; pointer-events: none;"></div>
+                        <div>[00:00:00] [SYS] Consola Máster inicializada.</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Core Features Section (Symmetric grid) -->
-    <section class="features-section" id="features">
+    <section class="features-section animate-fade-in delay-3" id="features">
         <div class="section-header">
             <h2 class="section-title">Ingeniería de Radio al Límite</h2>
             <p class="section-subtitle">Diseño robusto y acoplamiento en tiempo real para emisiones de alta norma operativa.</p>
         </div>
         <div class="features-grid">
-            <!-- Card 1 -->
-            <div class="feature-card">
-                <div class="feature-icon">🎚️</div>
+            <!-- Card 1: Ducking Simulator -->
+            <div class="feature-card" style="padding: 25px;">
+                <div class="feature-icon" style="margin-bottom: 15px;">🎚️</div>
                 <h3>Ducking de Alta Fidelidad</h3>
-                <p>Atenuación automática y matemática de música de fondo durante locuciones de voz, configurado con un filtro dinámico absoluto sin sobrecargas.</p>
+                <p style="margin-bottom: 15px;">Atenuación matemática de música de fondo durante locuciones de voz.</p>
+                <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 15px; text-align: center; position: relative; overflow: hidden; height: 100px; display: flex; align-items: center; justify-content: center; gap: 4px;" id="ducking-visualizer">
+                    <!-- CSS Wave bars for music and voice -->
+                    <div class="duck-wave music-wave"></div><div class="duck-wave music-wave"></div><div class="duck-wave music-wave"></div>
+                    <div class="duck-wave voice-wave" style="display:none; background: var(--accent-orange);"></div>
+                    <div class="duck-wave voice-wave" style="display:none; background: var(--accent-orange);"></div>
+                    <div class="duck-wave music-wave"></div><div class="duck-wave music-wave"></div><div class="duck-wave music-wave"></div>
+                </div>
+                <div class="mock-btn mock-btn-active" style="margin-top: 15px;" onclick="simulateDucking()">SIMULAR DUCKING</div>
             </div>
-            <!-- Card 2 -->
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3>VU Metros Estéreo Reales</h3>
-                <p>Visualización de espectro multi-canal L/R independiente y sensible a picos con cambios de color automáticos (Verde, Naranja, Rojo).</p>
+            
+            <!-- Card 2: EQ Spectral Visualizer -->
+            <div class="feature-card" style="padding: 25px;">
+                <div class="feature-icon" style="margin-bottom: 15px;">📊</div>
+                <h3>EQ Paramétrico Butterworth</h3>
+                <p style="margin-bottom: 15px;">Filtros de orden 2 con corte variable sobre espectro L/R.</p>
+                <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; height: 100px; position: relative; overflow: hidden;">
+                    <svg viewBox="0 0 100 40" preserveAspectRatio="none" style="width: 100%; height: 100%;">
+                        <path id="eq-curve" d="M 0 20 Q 25 20, 50 20 T 100 20" fill="none" stroke="var(--accent-blue)" stroke-width="2" class="eq-path-animate"/>
+                        <circle cx="25" cy="20" r="2" fill="var(--accent-orange)" id="eq-node-sub"><animate attributeName="cy" values="20;10;30;20" dur="4s" repeatCount="indefinite"/></circle>
+                        <circle cx="75" cy="20" r="2" fill="var(--accent-neon-green)" id="eq-node-high"><animate attributeName="cy" values="20;30;5;20" dur="3s" repeatCount="indefinite"/></circle>
+                    </svg>
+                </div>
+                <div style="font-size: 0.65rem; color: gray; text-align: center; margin-top: 5px;">Mueve los sliders del Rack DSP para ver la acción espectral.</div>
             </div>
-            <!-- Card 3 -->
-            <div class="feature-card">
-                <div class="feature-icon">🔄</div>
-                <h3>Sincronización en Caliente</h3>
-                <p>Las bandas de ecualización y fader de transición del frontend sincronizan instantáneamente los parámetros de modulación y velocidad TTS del backend.</p>
-            </div>
-            <!-- Card 4 -->
-            <div class="feature-card">
-                <div class="feature-icon">💾</div>
+
+            <!-- Card 3: SQLite History Mockup -->
+            <div class="feature-card" style="padding: 25px;">
+                <div class="feature-icon" style="margin-bottom: 15px;">💾</div>
                 <h3>Historial SQLite Integrado</h3>
-                <p>Archivado automático de boletines máster y scripts en una base de datos local rápida, con ventana de recuperación y foco protegido.</p>
+                <p style="margin-bottom: 15px;">Archivado automático de boletines en BD relacional estructurada.</p>
+                <div style="background: #050505; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-family: Consolas, monospace; font-size: 0.6rem; color: var(--text-light); height: 100px; overflow: hidden; padding: 5px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr style="color: var(--accent-blue); border-bottom: 1px solid rgba(255,255,255,0.1);"><th>ID</th><th>TIPO</th><th>DURACIÓN</th><th>FECHA</th></tr>
+                        <tr><td>#1042</td><td>BOLETÍN</td><td>00:45s</td><td>14:05:12</td></tr>
+                        <tr><td>#1043</td><td>TALK_OVR</td><td>00:12s</td><td>14:18:05</td></tr>
+                        <tr><td>#1044</td><td>BOLETÍN</td><td>01:30s</td><td>15:00:00</td></tr>
+                        <tr><td>#1045</td><td style="color:var(--accent-green);">RECORD</td><td>00:05s</td><td>15:05:22</td></tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Card 4: Architecture Visualization -->
+            <div class="feature-card" style="padding: 25px;">
+                <div class="feature-icon" style="margin-bottom: 15px;">🔄</div>
+                <h3>Arquitectura de Capas</h3>
+                <p style="margin-bottom: 15px;">Flujo interno desde CustomTkinter UI hasta Pygame Mixer.</p>
+                <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 10px; height: 100px; display: flex; flex-direction: column; justify-content: space-around; font-size: 0.6rem; font-weight: bold; text-align: center;">
+                    <div style="border: 1px solid var(--accent-blue); padding: 4px; border-radius: 4px; color: var(--accent-blue);">UI: CustomTkinter / Frontend</div>
+                    <div style="color: gray;">⬇ Callback Events</div>
+                    <div style="border: 1px solid var(--accent-orange); padding: 4px; border-radius: 4px; color: var(--accent-orange);">CORE: DSP Filters & Ducking Math</div>
+                    <div style="color: gray;">⬇ Buffer Stream</div>
+                    <div style="border: 1px solid var(--accent-neon-green); padding: 4px; border-radius: 4px; color: var(--accent-neon-green);">HW: Pygame Mixer / Sounddevice</div>
+                </div>
             </div>
         </div>
+        
+        <style>
+            .duck-wave { width: 8px; border-radius: 4px; transition: all 0.3s ease; }
+            .music-wave { background: var(--accent-blue); height: 40px; animation: m-wave 1s infinite alternate; }
+            .music-wave.ducked { height: 10px !important; animation: none; background: rgba(168, 85, 247, 0.3); }
+            @keyframes m-wave { 0% { transform: scaleY(0.4); } 100% { transform: scaleY(1.2); } }
+            .eq-path-animate { transition: d 0.2s cubic-bezier(0.16, 1, 0.3, 1); }
+        </style>
+        
+        <script>
+            function simulateDucking() {
+                const musics = document.querySelectorAll('.music-wave');
+                const voices = document.querySelectorAll('.voice-wave');
+                
+                musics.forEach(m => m.classList.add('ducked'));
+                voices.forEach(v => {
+                    v.style.display = 'block';
+                    v.style.height = '60px';
+                    v.style.animation = 'm-wave 0.3s infinite alternate';
+                });
+                logToTerminal("Simulación Ducking: Atenuando música -85%.", "DSP");
+                
+                setTimeout(() => {
+                    musics.forEach(m => m.classList.remove('ducked'));
+                    voices.forEach(v => v.style.display = 'none');
+                    logToTerminal("Simulación Ducking: Recuperando ganancia maestra.", "DSP");
+                }, 3000);
+            }
+        </script>
     </section>
 
     <!-- Tech Specs Section (Centered specs container) -->
-    <section class="tech-details">
+    <section class="tech-details animate-fade-in delay-3">
         <div class="tech-container">
             <div class="tech-left">
                 <span class="tech-tag">Especificaciones</span>
@@ -1105,6 +1271,53 @@
             gateVal.innerText = `${e.target.value} dB`;
         });
 
+        // New sliders event listeners
+        const lowSlider = document.getElementById('low-slider');
+        const lowVal = document.getElementById('low-val');
+        lowSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            lowVal.innerText = (val >= 0 ? '+' : '') + val.toFixed(1) + ' dB';
+        });
+
+        const midSlider = document.getElementById('mid-slider');
+        const midVal = document.getElementById('mid-val');
+        midSlider.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            midVal.innerText = (val >= 0 ? '+' : '') + val.toFixed(1) + ' dB';
+        });
+
+        const fadeSlider = document.getElementById('fade-slider');
+        const fadeVal = document.getElementById('fade-val');
+        fadeSlider.addEventListener('input', (e) => {
+            fadeVal.innerText = `${parseFloat(e.target.value).toFixed(1)} s`;
+        });
+
+        // Script Editor Character Counter
+        const liveScript = document.getElementById('live-script');
+        const charCounter = document.getElementById('char-counter');
+        liveScript.addEventListener('input', (e) => {
+            const count = e.target.value.length;
+            charCounter.innerText = `${count} caracteres`;
+        });
+
+        // Engineering Terminal Logger
+        function logToTerminal(msg, level = 'SYS') {
+            const term = document.getElementById('engineering-terminal');
+            const now = new Date();
+            const time = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+            let color = '#00ff00';
+            if(level === 'WRN') color = '#ff9900';
+            if(level === 'ERR') color = '#ff3333';
+            if(level === 'DSP') color = '#3b9eff';
+            if(level === 'MIC') color = '#a855f7';
+            
+            const div = document.createElement('div');
+            div.style.color = color;
+            div.innerText = `[${time}] [${level}] ${msg}`;
+            term.appendChild(div);
+            term.scrollTop = term.scrollHeight;
+        }
+
         // Transport Controls Play/Pause toggle logic
         const playBtn = document.getElementById('play-btn');
         const pauseBtn = document.getElementById('pause-btn');
@@ -1137,13 +1350,14 @@
         });
 
         // Simulating organic fluctuation in VU meters
-        function updateVUMeters(volumeFactor = 0.8) {
-            if (!isPlaying) return;
-            const varianceL = (Math.random() * 15 - 7.5); // +-7.5%
-            const varianceR = (Math.random() * 15 - 7.5);
+        function updateVUMeters(volumeFactor = 0.8, burst = false) {
+            if (!isPlaying && !burst) return;
+            const varianceL = burst ? (Math.random() * 40) : (Math.random() * 15 - 7.5);
+            const varianceR = burst ? (Math.random() * 40) : (Math.random() * 15 - 7.5);
             
-            let lPercent = Math.max(10, Math.min(100, Math.round(volumeFactor * 78 + varianceL)));
-            let rPercent = Math.max(10, Math.min(100, Math.round(volumeFactor * 84 + varianceR)));
+            let baseVol = burst ? 1.0 : volumeFactor;
+            let lPercent = Math.max(10, Math.min(100, Math.round(baseVol * (burst ? 50 : 78) + varianceL)));
+            let rPercent = Math.max(10, Math.min(100, Math.round(baseVol * (burst ? 50 : 84) + varianceR)));
 
             document.getElementById('vu-l').style.width = `${lPercent}%`;
             document.getElementById('vu-r').style.width = `${rPercent}%`;
@@ -1153,10 +1367,141 @@
 
         // Run dynamic meter fluctuation every 250ms
         setInterval(() => {
-            if (isPlaying) {
+            if (isPlaying && !isTalkOverActive && !isSpeaking) {
                 updateVUMeters(volSlider.value / 100);
             }
         }, 250);
+
+        // Soundboard audio synthesis (Web Audio API)
+        let audioCtx;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function triggerSound(effectName) {
+            logToTerminal(`Reproduciendo jingle: ${effectName}`, 'DSP');
+            updateVUMeters(1.0, true);
+            
+            const ctx = getAudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            
+            // Generate synthetic frequencies based on effect name
+            if (effectName === 'SIRENA') { osc.type = 'triangle'; osc.frequency.setValueAtTime(400, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 1); }
+            else if (effectName === 'IMPACTO') { osc.type = 'square'; osc.frequency.setValueAtTime(100, ctx.currentTime); osc.frequency.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5); }
+            else { osc.type = 'sine'; osc.frequency.setValueAtTime(440, ctx.currentTime); }
+            
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1);
+            
+            osc.start();
+            osc.stop(ctx.currentTime + 1);
+        }
+
+        // Mic Simulation
+        let isMicRecording = false;
+        function toggleMic() {
+            const btn = document.getElementById('mic-btn');
+            isMicRecording = !isMicRecording;
+            if (isMicRecording) {
+                btn.className = "mock-btn mock-btn-active";
+                btn.innerText = "⏹️ DETENER MICRÓFONO";
+                logToTerminal("Inicializando captura de micrófono WebRTC...", "MIC");
+                // Start pulsing the VU meters heavily to simulate mic input
+                window.micInterval = setInterval(() => updateVUMeters(1.0, true), 100);
+            } else {
+                btn.className = "mock-btn mock-btn-inactive";
+                btn.innerText = "🎙️ GRABAR MICRÓFONO";
+                logToTerminal("Grabación finalizada y almacenada en buffer temporal.", "MIC");
+                clearInterval(window.micInterval);
+                updateVUMeters(0.0);
+                const listenBtn = document.getElementById('listen-btn');
+                listenBtn.className = "mock-btn mock-btn-active";
+                listenBtn.style.opacity = '1';
+                listenBtn.style.pointerEvents = 'auto';
+            }
+        }
+
+        function playMicRecord() {
+            logToTerminal("Reproduciendo pista vocal guardada...", "MIC");
+            updateVUMeters(0.8, true);
+            setTimeout(() => {
+                logToTerminal("Pista vocal finalizada.", "MIC");
+                updateVUMeters(volSlider.value / 100);
+            }, 2000);
+        }
+
+        // TTS & Talk Over logic
+        let isTalkOverActive = false;
+        let isSpeaking = false;
+
+        function toggleTalkOver() {
+            const btn = document.getElementById('talk-over-btn');
+            isTalkOverActive = !isTalkOverActive;
+            if (isTalkOverActive) {
+                btn.style.boxShadow = "0 0 15px rgba(255, 153, 0, 0.8)";
+                btn.style.border = "2px solid #ffffff";
+                logToTerminal("Talk Over ACTIVADO. Ducking comprimiendo música de fondo a 15%.", "DSP");
+                updateVUMeters(0.15); // Ducking visualization
+            } else {
+                btn.style.boxShadow = "none";
+                btn.style.border = "none";
+                logToTerminal("Talk Over DESACTIVADO. Música retornando a volumen máster.", "DSP");
+            }
+        }
+
+        function speakTTS() {
+            const text = document.getElementById('quick-tts').value;
+            if (!text) {
+                logToTerminal("Error: Texto vacío para síntesis.", "ERR");
+                return;
+            }
+            executeTTS(text);
+        }
+
+        function mixAndTransmit() {
+            const text = document.getElementById('live-script').value;
+            if (!text) {
+                logToTerminal("El boletín está vacío. No hay script para mezclar.", "WRN");
+                return;
+            }
+            logToTerminal("Iniciando mezcla maestra: ducking + script...", "SYS");
+            executeTTS(text);
+        }
+
+        function executeTTS(text) {
+            if (!window.speechSynthesis) {
+                logToTerminal("Web Speech API no soportado en este navegador.", "ERR");
+                return;
+            }
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'es-ES';
+            utterance.rate = 1.0;
+            
+            utterance.onstart = () => {
+                isSpeaking = true;
+                logToTerminal("TTS en curso. Aplicando filtro ducking...", "DSP");
+                updateVUMeters(0.9, true); // Voice levels
+            };
+            
+            utterance.onend = () => {
+                isSpeaking = false;
+                logToTerminal("Síntesis finalizada. Recuperando envolvente de volumen.", "DSP");
+                document.getElementById('quick-tts').value = '';
+                if(isPlaying && !isTalkOverActive) updateVUMeters(volSlider.value / 100);
+            };
+            
+            window.speechSynthesis.speak(utterance);
+        }
     </script>
 </body>
 </html>

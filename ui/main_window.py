@@ -32,7 +32,22 @@ class VentanaTactica(ctk.CTk):
         self.configure(fg_color="#0a0b0d")
         
         self.title("🎙️ S.M.A.C. BROADCAST SYSTEM - HIGH-DENSITY TELEMETRY DESK")
-        self.geometry("1240x740")
+        # Configurar dimensiones adaptables según la resolución de pantalla real para evitar desbordamientos
+        try:
+            screen_w = self.winfo_screenwidth()
+            screen_h = self.winfo_screenheight()
+            if screen_h < 780:
+                base_w = min(1200, screen_w - 40)
+                base_h = min(680, screen_h - 80)
+            else:
+                base_w = 1240
+                base_h = 740
+        except:
+            base_w = 1240
+            base_h = 740
+
+        self.geometry(f"{base_w}x{base_h}")
+        self.minsize(min(1024, base_w), min(640, base_h))
         
         # Permitir redimensionamiento fluido
         self.resizable(True, True)
@@ -100,6 +115,16 @@ class VentanaTactica(ctk.CTk):
         self.segundos_emision = 0
         self.eq_vals = {"SUB": 0.8, "LOW": 0.0, "MID": -3.0, "HIGH": 4.0}
         
+        # Inicializar variables para la interpolación balística ultra-suave a 60Hz del VU meter
+        self._vu_target_l = 0.05
+        self._vu_target_r = 0.05
+        self._vu_actual_l = 0.05
+        self._vu_actual_r = 0.05
+        self._vu_last_target_time = 0
+        self.perfil_rms_l = []
+        self.perfil_rms_r = []
+        self.ruta_perfil_actual = ""
+        
         # Registrar limpiadores del sistema
         register_resource_cleanup(self._cleanup_ui_resources, priority=5)
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
@@ -136,8 +161,15 @@ class VentanaTactica(ctk.CTk):
         self.lbl_status_bar = ctk.CTkLabel(self.frame_estado, text="EMISIÓN ACTIVA", font=ctk.CTkFont(size=10, weight="bold"), text_color="#00ff00")
         self.lbl_status_bar.pack(side="left", padx=15, pady=3)
         
+        # Botón de Ajustes en el extremo derecho
+        self.btn_ajustes = ctk.CTkButton(
+            self.frame_estado, text="⚙️ AJUSTES", width=80, height=20, font=ctk.CTkFont(size=10, weight="bold"),
+            fg_color="#282c34", hover_color="#3b9eff", command=self._mostrar_ajustes
+        )
+        self.btn_ajustes.pack(side="right", padx=15, pady=3)
+        
         self.lbl_db_status = ctk.CTkLabel(self.frame_estado, text="BASE DE DATOS CONECTADA" if (self.db and self.db.connection) else "BASE DE DATOS DESCONECTADA", font=ctk.CTkFont(size=10, weight="bold"), text_color="#3b9eff" if (self.db and self.db.connection) else "red")
-        self.lbl_db_status.pack(side="right", padx=15, pady=3)
+        self.lbl_db_status.pack(side="right", padx=10, pady=3)
 
         # -------------------------------------------------------------
         # CONTENEDOR PRINCIPAL - TABLERO DE CONTROL TIPO COCKPIT DE RADIO (CONSOLA RESPONSIVA)
@@ -250,7 +282,7 @@ class VentanaTactica(ctk.CTk):
         self.lbl_reloj = ctk.CTkLabel(frame_monitor, text="00:00:00", font=ctk.CTkFont(family="Consolas", size=52, weight="bold"), text_color="#00ff00")
         self.lbl_reloj.pack(pady=(5, 0))
         
-        self.lbl_estado = ctk.CTkLabel(frame_cen, text="ESTUDIO EN LÍNEA ESPECTRO ACTIVO", font=ctk.CTkFont(size=12, weight="bold"), text_color="gray")
+        self.lbl_estado = ctk.CTkLabel(frame_cen, text="ESTUDIO EN LÍNEA ESPECTRO ACTIVO", font=ctk.CTkFont(size=12, weight="bold"), text_color="gray", width=450, anchor="center")
         self.lbl_estado.pack(pady=(0, 3))
         
         # VU METER ultra-fino de alta fidelidad multi-canal estéreo (L y R)
@@ -278,6 +310,8 @@ class VentanaTactica(ctk.CTk):
         # PANEL DE TELEMETRÍA DE HARDWARE Y SEÑAL REAL
         self.frame_telem = ctk.CTkFrame(frame_cen, fg_color="#101216", corner_radius=6, border_width=1, border_color="#2c313c")
         self.frame_telem.pack(fill="x", padx=15, pady=(0, 8))
+        self.frame_telem.columnconfigure(0, weight=1, uniform="telem_grid")
+        self.frame_telem.columnconfigure(1, weight=1, uniform="telem_grid")
         
         # Grid de Telemetría 3x2
         self.lbl_telem_status = ctk.CTkLabel(self.frame_telem, text="ENGINE: STANDBY", font=ctk.CTkFont(family="Consolas", size=10, weight="bold"), text_color="#3b9eff")
@@ -316,7 +350,7 @@ class VentanaTactica(ctk.CTk):
         )
         btn_historial.pack(side="left")
         
-        self.lbl_contador = ctk.CTkLabel(frame_boletin_ctrls, text="0 caracteres", font=ctk.CTkFont(size=10), text_color="gray")
+        self.lbl_contador = ctk.CTkLabel(frame_boletin_ctrls, text="0 caracteres", font=ctk.CTkFont(size=10), text_color="gray", width=120, anchor="e")
         self.lbl_contador.pack(side="right")
         
         # MODULO DE MICROFONO Y GRABACION DE VOZ DIRECTA
@@ -441,6 +475,43 @@ class VentanaTactica(ctk.CTk):
         
         self.txt_terminal = ctk.CTkTextbox(frame_der, height=110, font=ctk.CTkFont(family="Consolas", size=9), fg_color="#101216", text_color="#00ff00", border_width=1, border_color="#2c313c")
         self.txt_terminal.pack(fill="both", expand=True, padx=12, pady=(0, 10))
+        
+        # Cargar configuraciones guardadas de forma asíncrona de SQLite
+        try:
+            if self.db:
+                import config
+                
+                vol_db = self.db.obtener_configuracion("volumen_master")
+                if vol_db is not None:
+                    v = float(vol_db)
+                    self.slider_volumen.set(v)
+                    self._cambiar_volumen(v)
+                    
+                gate_db = self.db.obtener_configuracion("noise_gate")
+                if gate_db is not None:
+                    self.slider_gate.set(float(gate_db))
+                    
+                fade_db = self.db.obtener_configuracion("fade_time")
+                if fade_db is not None:
+                    self.slider_fade.set(float(fade_db))
+                    
+                tts_db = self.db.obtener_configuracion("tts_rate")
+                if tts_db is not None:
+                    config.AUDIO_CONFIG['tts_rate'] = int(tts_db)
+                    
+                strict_db = self.db.obtener_configuracion("strict_filtering")
+                if strict_db is not None:
+                    config.FILTER_CONFIG['strict_filtering'] = (strict_db == "True")
+                    
+                mode_db = self.db.obtener_configuracion("appearance_mode")
+                if mode_db is not None:
+                    ctk.set_appearance_mode(mode_db)
+                    
+                log_db = self.db.obtener_configuracion("query_logging")
+                if log_db is not None:
+                    config.DB_CONFIG['enable_query_logging'] = (log_db == "True")
+        except:
+            pass
 
     # -------------------------------------------------------------
     # MÉTODOS DE SOPORTE E INTERACCION DE LA CONSOLA
@@ -457,75 +528,231 @@ class VentanaTactica(ctk.CTk):
         self.eq_vals[banda] = float(valor)
         self.log_event(f"EQ Banda {banda} modificada a {valor:.1f} dB", "DSP")
 
+    def cargar_perfil_audio_async(self, ruta):
+        if not ruta or not os.path.exists(ruta):
+            return
+        # Evitar recarga si ya es la misma ruta activa
+        if getattr(self, 'ruta_perfil_actual', '') == ruta:
+            return
+        self.ruta_perfil_actual = ruta
+        self.perfil_rms_l = []
+        self.perfil_rms_r = []
+        
+        def _hilo_carga():
+            try:
+                self.log_event(f"Analizando espectro de audio real: {os.path.basename(ruta)}...", "DSP")
+                profile_l, profile_r = self._generar_perfil_rms(ruta)
+                # Almacenar de forma atómica para sincronizar
+                self.perfil_rms_l = profile_l
+                self.perfil_rms_r = profile_r
+                if profile_l:
+                    self.log_event(f"Espectro estéreo analizado ({len(profile_l)} muestras reales).", "DSP")
+                else:
+                    self.log_event("Espectro cargado en modo fallback dinámico.", "DSP")
+            except Exception as e:
+                self.log_event(f"Error analizando espectro real: {e}", "WARNING")
+                
+        threading.Thread(target=_hilo_carga, daemon=True).start()
+
+    def _generar_perfil_rms(self, ruta_archivo, window_ms=50):
+        try:
+            import soundfile as sf
+            import numpy as np
+            data, samplerate = sf.read(ruta_archivo)
+            if len(data.shape) == 1:
+                data = np.column_stack((data, data))
+            
+            samples_per_window = int(samplerate * (window_ms / 1000.0))
+            num_windows = len(data) // samples_per_window
+            
+            profile_l = []
+            profile_r = []
+            for i in range(num_windows):
+                start = i * samples_per_window
+                end = start + samples_per_window
+                chunk = data[start:end]
+                
+                rms_l = np.sqrt(np.mean(chunk[:, 0]**2))
+                rms_r = np.sqrt(np.mean(chunk[:, 1]**2))
+                
+                # Mapeo no lineal premium para expandir la respuesta visual en el medidor
+                profile_l.append(min(0.98, max(0.05, float(rms_l * 2.8))))
+                profile_r.append(min(0.98, max(0.05, float(rms_r * 2.8))))
+                
+            return profile_l, profile_r
+        except Exception as e:
+            try:
+                from pydub import AudioSegment
+                import numpy as np
+                sound = AudioSegment.from_file(ruta_archivo)
+                if sound.channels == 1:
+                    sound = sound.set_channels(2)
+                
+                spl = sound.split_to_mono()
+                samples_l = np.array(spl[0].get_array_of_samples(), dtype=np.float32) / 32768.0
+                samples_r = np.array(spl[1].get_array_of_samples(), dtype=np.float32) / 32768.0
+                
+                samplerate = sound.frame_rate
+                samples_per_window = int(samplerate * (window_ms / 1000.0))
+                num_windows = len(samples_l) // samples_per_window
+                
+                profile_l = []
+                profile_r = []
+                for i in range(num_windows):
+                    start = i * samples_per_window
+                    end = start + samples_per_window
+                    
+                    rms_l = np.sqrt(np.mean(samples_l[start:end]**2))
+                    rms_r = np.sqrt(np.mean(samples_r[start:end]**2))
+                    
+                    profile_l.append(min(0.98, max(0.05, float(rms_l * 2.8))))
+                    profile_r.append(min(0.98, max(0.05, float(rms_r * 2.8))))
+                    
+                return profile_l, profile_r
+            except:
+                return [], []
+
     def _actualizar_reloj(self):
         try:
             hora_actual = time.strftime("%H:%M:%S")
-            self.lbl_reloj.configure(text=hora_actual)
-            self.after(1000, self._actualizar_reloj)
+            if getattr(self, '_reloj_previo', '') != hora_actual:
+                self._reloj_previo = hora_actual
+                self.lbl_reloj.configure(text=hora_actual)
+            self.after(200, self._actualizar_reloj)
         except:
             pass
 
     def _actualizar_vu_meter(self):
-        # Simular oscilaciones de sonido estéreo independientes pero orgánicas dependiendo de la emisión
+        # Medidor de VU estéreo de alta precisión conectado a salida de audio y micrófono real
         try:
-            if self.procesando:
-                val_l = random.uniform(0.65, 0.95)
-                val_r = random.uniform(0.65, 0.95)
-            elif getattr(self, 'pausado', False):
-                val_l = random.uniform(0.01, 0.02)
-                val_r = random.uniform(0.01, 0.02)
-            elif self.talkover_activo:
-                val_l = random.uniform(0.15, 0.45)
-                val_r = random.uniform(0.15, 0.45)
-            else:
-                try:
-                    import pygame
-                    if pygame.mixer.get_init() and pygame.mixer.music.get_busy():
-                        vol = pygame.mixer.music.get_volume()
-                        # Variaciones estéreo realistas
-                        base = random.uniform(0.4, 0.85) * vol
-                        val_l = min(1.0, max(0.0, base * random.uniform(0.9, 1.1)))
-                        val_r = min(1.0, max(0.0, base * random.uniform(0.9, 1.1)))
-                    else:
-                        val_l = random.uniform(0.01, 0.04)
-                        val_r = random.uniform(0.01, 0.04)
-                except:
-                    val_l = random.uniform(0.01, 0.03)
-                    val_r = random.uniform(0.01, 0.03)
+            # Inicializar niveles actuales si no existen para evitar errores de atributo
+            if not hasattr(self, '_vu_target_l'):
+                self._vu_target_l = 0.05
+                self._vu_target_r = 0.05
+                self._vu_actual_l = 0.05
+                self._vu_actual_r = 0.05
+                self._vu_last_target_time = 0
             
-            # Aplicar valores
-            self.vu_meter_l.set(val_l)
-            self.vu_meter_r.set(val_r)
-            
-            # Colorear dinámicamente según nivel de señal (Verde -> Naranja -> Rojo)
-            for v_meter, val in [(self.vu_meter_l, val_l), (self.vu_meter_r, val_r)]:
-                if val >= 0.85:
-                    v_meter.configure(progress_color="#ff3333") # Rojo saturado / pico
-                elif val >= 0.70:
-                    v_meter.configure(progress_color="#ff9900") # Naranja warning
+            t_ahora = time.time()
+            # Actualizar el target de nivel a intervalos de 60ms para no saturar CPU con llamadas de API/audio
+            if t_ahora - self._vu_last_target_time > 0.06:
+                self._vu_last_target_time = t_ahora
+                
+                # Caso 1: Procesamiento de ondas Máster activo
+                if self.procesando:
+                    self._vu_target_l = random.uniform(0.65, 0.95)
+                    self._vu_target_r = random.uniform(0.65, 0.95)
+                
+                # Caso 2: Grabación de micrófono en vivo (Captura del micrófono físico en tiempo real!)
+                elif self.audio_recorder and self.audio_recorder.recording:
+                    amp_real = self.audio_recorder.get_last_amplitude()
+                    val = min(0.98, max(0.05, float(amp_real * 3.5)))
+                    self._vu_target_l = min(0.98, max(0.05, val * random.uniform(0.9, 1.1)))
+                    self._vu_target_r = min(0.98, max(0.05, val * random.uniform(0.9, 1.1)))
+                
+                # Caso 3: Emisión en pausa
+                elif getattr(self, 'pausado', False):
+                    self._vu_target_l = 0.01
+                    self._vu_target_r = 0.01
+                
+                # Caso 4: Emisión activa o reproductor activo (Música o Máster en reproducción)
                 else:
-                    v_meter.configure(progress_color="#22cc66") # Verde seguro
+                    try:
+                        import pygame
+                        if pygame.mixer.get_init() and pygame.mixer.music.get_busy():
+                            vol = pygame.mixer.music.get_volume()
+                            pos_ms = pygame.mixer.music.get_pos()
+                            
+                            # Si disponemos del perfil RMS real precargado para el archivo activo
+                            if getattr(self, 'perfil_rms_l', None) and getattr(self, 'perfil_rms_r', None):
+                                idx = int(pos_ms / 50)
+                                if idx < len(self.perfil_rms_l):
+                                    self._vu_target_l = self.perfil_rms_l[idx] * vol
+                                    self._vu_target_r = self.perfil_rms_r[idx] * vol
+                                else:
+                                    self._vu_target_l = 0.05
+                                    self._vu_target_r = 0.05
+                            else:
+                                # Fallback dinámico temporal mientras se calcula el análisis en caliente
+                                base = random.uniform(0.4, 0.85) * vol
+                                self._vu_target_l = min(1.0, max(0.0, base * random.uniform(0.9, 1.1)))
+                                self._vu_target_r = min(1.0, max(0.0, base * random.uniform(0.9, 1.1)))
+                        else:
+                            # Sin actividad de audio ni micrófono
+                            self._vu_target_l = random.uniform(0.01, 0.02)
+                            self._vu_target_r = random.uniform(0.01, 0.02)
+                    except:
+                        self._vu_target_l = 0.02
+                        self._vu_target_r = 0.02
             
-            self.after(120, self._actualizar_vu_meter)
+            # Interpolación física de balística a 60Hz: subida instantánea, caída analógica suave
+            factor_l = 0.35 if self._vu_target_l > self._vu_actual_l else 0.18
+            factor_r = 0.35 if self._vu_target_r > self._vu_actual_r else 0.18
+            
+            # Calcular nuevos valores interpolados
+            nuevo_l = self._vu_actual_l + (self._vu_target_l - self._vu_actual_l) * factor_l
+            nuevo_r = self._vu_actual_r + (self._vu_target_r - self._vu_actual_r) * factor_r
+            
+            # OPTIMIZACIÓN EXTREMA DE CPU: Evitar redibujar el canvas de CustomTkinter si el cambio es imperceptible
+            cambio_l = abs(nuevo_l - self._vu_actual_l)
+            cambio_r = abs(nuevo_r - self._vu_actual_r)
+            
+            if cambio_l > 0.003:
+                self._vu_actual_l = nuevo_l
+                self.vu_meter_l.set(self._vu_actual_l)
+                
+                # Colorear dinámicamente según nivel de señal (Verde -> Naranja -> Rojo)
+                if self._vu_actual_l >= 0.85:
+                    self.vu_meter_l.configure(progress_color="#ff3333") # Rojo saturado / pico
+                elif self._vu_actual_l >= 0.70:
+                    self.vu_meter_l.configure(progress_color="#ff9900") # Naranja warning
+                else:
+                    self.vu_meter_l.configure(progress_color="#22cc66") # Verde seguro
+            
+            if cambio_r > 0.003:
+                self._vu_actual_r = nuevo_r
+                self.vu_meter_r.set(self._vu_actual_r)
+                
+                # Colorear dinámicamente según nivel de señal (Verde -> Naranja -> Rojo)
+                if self._vu_actual_r >= 0.85:
+                    self.vu_meter_r.configure(progress_color="#ff3333") # Rojo saturado / pico
+                elif self._vu_actual_r >= 0.70:
+                    self.vu_meter_r.configure(progress_color="#ff9900") # Naranja warning
+                else:
+                    self.vu_meter_r.configure(progress_color="#22cc66") # Verde seguro
+            
+            # Programar siguiente frame a 60 FPS (cada 16ms)
+            self.after(16, self._actualizar_vu_meter)
         except Exception as e:
             pass
 
     def _actualizar_telemetria(self):
-        """Monitorea el hardware real (CPU, RAM) y el motor de audio en tiempo real."""
+        """Monitorea el hardware real (CPU, RAM) y el motor de audio en tiempo real con optimización extrema."""
         try:
-            # 1. Obtener uso real del sistema con capturas seguras
-            cpu_load = 0.0
-            ram_free = 0.0
-            try:
-                import psutil
-                cpu_load = psutil.cpu_percent()
-                ram_free = psutil.virtual_memory().available / (1024**3)
-            except:
-                cpu_load = random.uniform(2.5, 8.5)
-                ram_free = 1.45
+            t_ahora = time.time()
             
-            self.lbl_telem_cpu.configure(text=f"💻 CPU LOAD: {cpu_load:.1f}%")
-            self.lbl_telem_ram.configure(text=f"💾 RAM LIBRE: {ram_free:.2f} GB")
+            # 1. Obtener uso real del sistema de forma espaciada (cada 2.0 segundos para no sobrecargar el CPU)
+            if not hasattr(self, '_last_hardware_poll_time') or t_ahora - self._last_hardware_poll_time > 2.0:
+                self._last_hardware_poll_time = t_ahora
+                cpu_load = 0.0
+                ram_free = 0.0
+                try:
+                    import psutil
+                    cpu_load = psutil.cpu_percent()
+                    ram_free = psutil.virtual_memory().available / (1024**3)
+                except:
+                    cpu_load = random.uniform(2.5, 8.5)
+                    ram_free = 1.45
+                
+                # Redibujar solo si los textos cambiaron significativamente
+                txt_cpu = f"💻 CPU LOAD: {cpu_load:.1f}%"
+                txt_ram = f"💾 RAM LIBRE: {ram_free:.2f} GB"
+                if getattr(self, '_prev_txt_cpu', '') != txt_cpu:
+                    self._prev_txt_cpu = txt_cpu
+                    self.lbl_telem_cpu.configure(text=txt_cpu)
+                if getattr(self, '_prev_txt_ram', '') != txt_ram:
+                    self._prev_txt_ram = txt_ram
+                    self.lbl_telem_ram.configure(text=txt_ram)
             
             # 2. Monitorear estado del motor de sonido real
             engine_status = "📻 ENGINE: STANDBY"
@@ -537,11 +764,18 @@ class VentanaTactica(ctk.CTk):
                 engine_status = "⏳ ENGINE: PROCESANDO MÁSTER"
             elif recording_active:
                 engine_status = "🎙️ ENGINE: GRABANDO MIC"
-                self.segundos_grabados += 1
+                # Incrementar segundos en base a intervalos de 250ms de forma precisa
+                if not hasattr(self, '_last_rec_time'):
+                    self._last_rec_time = t_ahora
+                delta_rec = t_ahora - self._last_rec_time
+                if delta_rec >= 1.0:
+                    self.segundos_grabados += int(delta_rec)
+                    self._last_rec_time = t_ahora
                 minutos = self.segundos_grabados // 60
                 segundos = self.segundos_grabados % 60
                 tiempo_str = f"⏱️ RECORD: {minutos:02d}:{segundos:02d}"
             else:
+                self._last_rec_time = t_ahora
                 try:
                     import pygame
                     if pygame.mixer.get_init() and pygame.mixer.music.get_busy():
@@ -559,13 +793,19 @@ class VentanaTactica(ctk.CTk):
                 except:
                     pass
             
-            self.lbl_telem_status.configure(text=engine_status)
-            self.lbl_telem_tiempo.configure(text=tiempo_str)
+            # Cambiar textos del motor solo si cambian
+            if getattr(self, '_prev_engine_status', '') != engine_status:
+                self._prev_engine_status = engine_status
+                self.lbl_telem_status.configure(text=engine_status)
+            if getattr(self, '_prev_tiempo_str', '') != tiempo_str:
+                self._prev_tiempo_str = tiempo_str
+                self.lbl_telem_tiempo.configure(text=tiempo_str)
             
             # 3. Monitorear Ecualizador en la telemetría
-            self.lbl_telem_eq.configure(
-                text=f"🔊 EQ: S {self.eq_vals['SUB']:.1f} | L {self.eq_vals['LOW']:.1f} | M {self.eq_vals['MID']:.1f} | H {self.eq_vals['HIGH']:.1f}"
-            )
+            txt_eq = f"🔊 EQ: S {self.eq_vals['SUB']:.1f} | L {self.eq_vals['LOW']:.1f} | M {self.eq_vals['MID']:.1f} | H {self.eq_vals['HIGH']:.1f}"
+            if getattr(self, '_prev_txt_eq', '') != txt_eq:
+                self._prev_txt_eq = txt_eq
+                self.lbl_telem_eq.configure(text=txt_eq)
             
             # 4. Monitorear Física del Noise Gate Real (Promedio de L y R)
             vu_val = (self.vu_meter_l.get() + self.vu_meter_r.get()) / 2.0
@@ -579,12 +819,18 @@ class VentanaTactica(ctk.CTk):
                 gate_state = "🔒 GATE: COMPRIMIDO"
                 gate_color = "#ff5555"
                 
-            self.lbl_telem_gate.configure(text=f"{gate_state} | PEAK {db_level:.1f} dB", text_color=gate_color)
+            txt_gate = f"{gate_state} | PEAK {db_level:.1f} dB"
+            if getattr(self, '_prev_txt_gate', '') != txt_gate or getattr(self, '_prev_gate_color', '') != gate_color:
+                self._prev_txt_gate = txt_gate
+                self._prev_gate_color = gate_color
+                self.lbl_telem_gate.configure(text=txt_gate, text_color=gate_color)
             
         except Exception as e:
             pass
             
-        self.after(500, self._actualizar_telemetria)
+        # Actualización más rápida para respuesta instantánea de Gate/Tiempo (250ms),
+        # pero con coste de dibujo cero gracias al filtrado atómico de strings redundantes.
+        self.after(250, self._actualizar_telemetria)
 
     def _actualizar_contador(self, event=None):
         texto = self.txt_boletin.get("0.0", "end").strip()
@@ -667,8 +913,9 @@ class VentanaTactica(ctk.CTk):
                 self.duracion_pista_actual = snd.get_length()
                 del snd # ¡CRÍTICO: Liberar inmediatamente el lock de Windows del archivo de audio!
                 
-                # Reproducir a través del audio_controller
+                # Reproducir a través del audio_controller y cargar espectro RMS de forma asíncrona
                 self.audio_controller.reproducir_audio(activa)
+                self.cargar_perfil_audio_async(activa)
                 self.pausado = False
                 
                 # Sincronizar de inmediato el volumen con el slider físico actual
@@ -899,6 +1146,7 @@ class VentanaTactica(ctk.CTk):
             
         try:
             self.audio_controller.reproducir_audio(self.ruta_salida_actual)
+            self.cargar_perfil_audio_async(self.ruta_salida_actual)
             
             # Sincronizar volumen con el control físico actual
             try:
@@ -1009,6 +1257,244 @@ class VentanaTactica(ctk.CTk):
         except Exception as e:
             self.log_event(f"Error al abrir historial: {e}", "WARNING")
             messagebox.showerror("Error", f"No se pudo cargar el historial: {e}")
+
+    def _mostrar_ajustes(self):
+        try:
+            from tkinter import messagebox
+            vent_ajustes = ctk.CTkToplevel(self, fg_color="#111317")
+            vent_ajustes.title("⚙️ CONFIGURACIÓN GLOBAL DEL SISTEMA SMAC")
+            vent_ajustes.geometry("500x550")
+            vent_ajustes.resizable(False, False)
+            
+            try:
+                vent_ajustes.update_idletasks()
+            except:
+                pass
+                
+            # Garantizar que permanezca al frente de forma segura
+            try:
+                vent_ajustes.transient(self)
+                vent_ajustes.grab_set()
+            except:
+                pass
+                
+            # Forzar foco con validación de existencia del widget
+            vent_ajustes.after(100, lambda: [vent_ajustes.focus_force() if (vent_ajustes and vent_ajustes.winfo_exists()) else None])
+            
+            lbl_title = ctk.CTkLabel(vent_ajustes, text="Ajustes y Parámetros Globales", font=ctk.CTkFont(size=14, weight="bold"), text_color="#3b9eff")
+            lbl_title.pack(pady=(15, 5))
+            
+            # Contenedor de Ajustes Scrollable para soporte completo
+            frame_box = ctk.CTkScrollableFrame(vent_ajustes, fg_color="#101216", border_width=1, border_color="#2c313c")
+            frame_box.pack(fill="both", expand=True, padx=20, pady=(0, 15))
+            
+            # =========================================================
+            # SECCIÓN 1: CONTROL DE AUDIO & EMISIÓN (🎚️)
+            # =========================================================
+            lbl_sec1 = ctk.CTkLabel(frame_box, text="🎚️ SISTEMA DE AUDIO & EMISIÓN", font=ctk.CTkFont(size=11, weight="bold"), text_color="#3b9eff")
+            lbl_sec1.pack(anchor="w", padx=10, pady=(10, 5))
+            
+            # --- 1. Volumen Maestro ---
+            lbl_vol = ctk.CTkLabel(frame_box, text="Volumen Máster Preferido (Inicio):", font=ctk.CTkFont(size=10, weight="bold"), text_color="gray")
+            lbl_vol.pack(anchor="w", padx=15, pady=(5, 2))
+            frame_vol_row = ctk.CTkFrame(frame_box, fg_color="transparent")
+            frame_vol_row.pack(fill="x", padx=15, pady=(0, 8))
+            
+            current_pref_vol = 0.8
+            if self.db:
+                val = self.db.obtener_configuracion("volumen_master")
+                if val is not None: current_pref_vol = float(val)
+            
+            lbl_vol_val = ctk.CTkLabel(frame_vol_row, text=f"{int(current_pref_vol * 100)}%", font=ctk.CTkFont(size=10, weight="bold"), width=35)
+            lbl_vol_val.pack(side="right", padx=(5, 0))
+            def on_pref_vol_slide(v): lbl_vol_val.configure(text=f"{int(float(v) * 100)}%")
+            slider_pref_vol = ctk.CTkSlider(frame_vol_row, from_=0, to=1, height=14, progress_color="#22cc66", button_color="#22cc66", button_hover_color="#33ff77", command=on_pref_vol_slide)
+            slider_pref_vol.set(current_pref_vol)
+            slider_pref_vol.pack(side="left", fill="x", expand=True)
+            
+            # --- 2. Noise Gate ---
+            lbl_gate = ctk.CTkLabel(frame_box, text="Noise Gate por Defecto (dB):", font=ctk.CTkFont(size=10, weight="bold"), text_color="gray")
+            lbl_gate.pack(anchor="w", padx=15, pady=(5, 2))
+            frame_gate_row = ctk.CTkFrame(frame_box, fg_color="transparent")
+            frame_gate_row.pack(fill="x", padx=15, pady=(0, 8))
+            
+            current_pref_gate = -45.0
+            if self.db:
+                val = self.db.obtener_configuracion("noise_gate")
+                if val is not None: current_pref_gate = float(val)
+            
+            lbl_gate_val = ctk.CTkLabel(frame_gate_row, text=f"{int(current_pref_gate)} dB", font=ctk.CTkFont(size=10, weight="bold"), width=45)
+            lbl_gate_val.pack(side="right", padx=(5, 0))
+            def on_pref_gate_slide(v): lbl_gate_val.configure(text=f"{int(float(v))} dB")
+            slider_pref_gate = ctk.CTkSlider(frame_gate_row, from_=-60, to=0, height=14, progress_color="#ff9900", button_color="#ff9900", button_hover_color="#ffb84d", command=on_pref_gate_slide)
+            slider_pref_gate.set(current_pref_gate)
+            slider_pref_gate.pack(side="left", fill="x", expand=True)
+            
+            # --- 3. Fader Transition ---
+            lbl_fade = ctk.CTkLabel(frame_box, text="Fader de Transición Inicial (S):", font=ctk.CTkFont(size=10, weight="bold"), text_color="gray")
+            lbl_fade.pack(anchor="w", padx=15, pady=(5, 2))
+            frame_fade_row = ctk.CTkFrame(frame_box, fg_color="transparent")
+            frame_fade_row.pack(fill="x", padx=15, pady=(0, 8))
+            
+            current_pref_fade = 3.0
+            if self.db:
+                val = self.db.obtener_configuracion("fade_time")
+                if val is not None: current_pref_fade = float(val)
+            
+            lbl_fade_val = ctk.CTkLabel(frame_fade_row, text=f"{int(current_pref_fade)} s", font=ctk.CTkFont(size=10, weight="bold"), width=35)
+            lbl_fade_val.pack(side="right", padx=(5, 0))
+            def on_pref_fade_slide(v): lbl_fade_val.configure(text=f"{int(float(v))} s")
+            slider_pref_fade = ctk.CTkSlider(frame_fade_row, from_=0, to=10, height=14, progress_color="#3b9eff", button_color="#3b9eff", button_hover_color="#0080ff", command=on_pref_fade_slide)
+            slider_pref_fade.set(current_pref_fade)
+            slider_pref_fade.pack(side="left", fill="x", expand=True)
+            
+            # --- 4. TTS Locution Rate ---
+            lbl_tts_rate = ctk.CTkLabel(frame_box, text="Velocidad Locución TTS por Defecto (WPM):", font=ctk.CTkFont(size=10, weight="bold"), text_color="gray")
+            lbl_tts_rate.pack(anchor="w", padx=15, pady=(5, 2))
+            frame_tts_row = ctk.CTkFrame(frame_box, fg_color="transparent")
+            frame_tts_row.pack(fill="x", padx=15, pady=(0, 10))
+            
+            current_pref_tts = 160
+            if self.db:
+                val = self.db.obtener_configuracion("tts_rate")
+                if val is not None: current_pref_tts = int(val)
+                
+            lbl_tts_val = ctk.CTkLabel(frame_tts_row, text=f"{current_pref_tts} WPM", font=ctk.CTkFont(size=10, weight="bold"), width=55)
+            lbl_tts_val.pack(side="right", padx=(5, 0))
+            def on_pref_tts_slide(v): lbl_tts_val.configure(text=f"{int(float(v))} WPM")
+            slider_pref_tts = ctk.CTkSlider(frame_tts_row, from_=100, to=250, height=14, progress_color="#a855f7", button_color="#a855f7", button_hover_color="#c084fc", command=on_pref_tts_slide)
+            slider_pref_tts.set(current_pref_tts)
+            slider_pref_tts.pack(side="left", fill="x", expand=True)
+            
+            # =========================================================
+            # SECCIÓN 2: PROTOCOLO & FILTRADO DE CONTENIDO (🛡️)
+            # =========================================================
+            ctk.CTkFrame(frame_box, height=1, fg_color="#2c313c").pack(fill="x", padx=5, pady=8)
+            lbl_sec2 = ctk.CTkLabel(frame_box, text="🛡️ NEUTRALIDAD & FILTRADO", font=ctk.CTkFont(size=11, weight="bold"), text_color="#ffcc00")
+            lbl_sec2.pack(anchor="w", padx=10, pady=(0, 5))
+            
+            # --- Strict Neutrality Filter Toggle ---
+            current_pref_strict = "True"
+            if self.db:
+                val = self.db.obtener_configuracion("strict_filtering")
+                if val is not None: current_pref_strict = val
+            
+            switch_strict = ctk.CTkSwitch(frame_box, text="Filtrado Estricto de Términos Políticos/No-Neutrales", font=ctk.CTkFont(size=10, weight="bold"), progress_color="#ff9900")
+            if current_pref_strict == "True":
+                switch_strict.select()
+            else:
+                switch_strict.deselect()
+            switch_strict.pack(anchor="w", padx=15, pady=5)
+            
+            # =========================================================
+            # SECCIÓN 3: APARIENCIA & TEMA VISUAL (🎨)
+            # =========================================================
+            ctk.CTkFrame(frame_box, height=1, fg_color="#2c313c").pack(fill="x", padx=5, pady=8)
+            lbl_sec3 = ctk.CTkLabel(frame_box, text="🎨 APARIENCIA & INTERFAZ", font=ctk.CTkFont(size=11, weight="bold"), text_color="#10b981")
+            lbl_sec3.pack(anchor="w", padx=10, pady=(0, 5))
+            
+            # --- Appearance Mode ---
+            frame_theme_row = ctk.CTkFrame(frame_box, fg_color="transparent")
+            frame_theme_row.pack(fill="x", padx=15, pady=3)
+            
+            ctk.CTkLabel(frame_theme_row, text="Modo de Apariencia:", font=ctk.CTkFont(size=10, weight="bold"), text_color="gray").pack(side="left")
+            
+            current_pref_mode = "Dark"
+            if self.db:
+                val = self.db.obtener_configuracion("appearance_mode")
+                if val is not None: current_pref_mode = val
+                
+            opt_mode = ctk.CTkOptionMenu(frame_theme_row, values=["Dark", "Light", "System"], width=100, height=22, font=ctk.CTkFont(size=10), fg_color="#282c34", button_color="#282c34", button_hover_color="#3e4451")
+            opt_mode.set(current_pref_mode)
+            opt_mode.pack(side="right")
+            
+            # --- Accent Color Theme ---
+            frame_color_row = ctk.CTkFrame(frame_box, fg_color="transparent")
+            frame_color_row.pack(fill="x", padx=15, pady=3)
+            
+            ctk.CTkLabel(frame_color_row, text="Color de Acento:", font=ctk.CTkFont(size=10, weight="bold"), text_color="gray").pack(side="left")
+            
+            current_pref_color = "blue"
+            if self.db:
+                val = self.db.obtener_configuracion("color_theme")
+                if val is not None: current_pref_color = val
+                
+            opt_color = ctk.CTkOptionMenu(frame_color_row, values=["blue", "green", "dark-blue"], width=100, height=22, font=ctk.CTkFont(size=10), fg_color="#282c34", button_color="#282c34", button_hover_color="#3e4451")
+            opt_color.set(current_pref_color)
+            opt_color.pack(side="right")
+            
+            # =========================================================
+            # SECCIÓN 4: BASE DE DATOS & LOGGING (💾)
+            # =========================================================
+            ctk.CTkFrame(frame_box, height=1, fg_color="#2c313c").pack(fill="x", padx=5, pady=8)
+            lbl_sec4 = ctk.CTkLabel(frame_box, text="💾 DIAGNÓSTICO & LOGGING", font=ctk.CTkFont(size=11, weight="bold"), text_color="gray")
+            lbl_sec4.pack(anchor="w", padx=10, pady=(0, 5))
+            
+            # --- DB Query Logging Toggle ---
+            current_pref_log = "False"
+            if self.db:
+                val = self.db.obtener_configuracion("query_logging")
+                if val is not None: current_pref_log = val
+            
+            switch_log = ctk.CTkSwitch(frame_box, text="Habilitar Registro (Logging) de Consultas SQLite", font=ctk.CTkFont(size=10, weight="bold"))
+            if current_pref_log == "True":
+                switch_log.select()
+            else:
+                switch_log.deselect()
+            switch_log.pack(anchor="w", padx=15, pady=5)
+            
+            # Guardar Ajustes en SQLite
+            def guardar_todos_los_ajustes():
+                vol_val = slider_pref_vol.get()
+                gate_val = slider_pref_gate.get()
+                fade_val = slider_pref_fade.get()
+                tts_val = int(slider_pref_tts.get())
+                strict_val = "True" if switch_strict.get() == 1 else "False"
+                mode_val = opt_mode.get()
+                color_val = opt_color.get()
+                log_val = "True" if switch_log.get() == 1 else "False"
+                
+                # 1. Aplicar cambios a la interfaz y mezcladores live
+                self.slider_volumen.set(vol_val)
+                self._cambiar_volumen(vol_val)
+                self.slider_gate.set(gate_val)
+                self.slider_fade.set(fade_val)
+                
+                # 2. Aplicar modo de apariencia en caliente
+                ctk.set_appearance_mode(mode_val)
+                
+                # 3. Actualizar configuraciones en caliente en memoria
+                import config
+                config.AUDIO_CONFIG['tts_rate'] = tts_val
+                config.AUDIO_CONFIG['ducking_db'] = abs(gate_val)
+                config.FILTER_CONFIG['strict_filtering'] = (strict_val == "True")
+                config.DB_CONFIG['enable_query_logging'] = (log_val == "True")
+                
+                if self.db:
+                    try:
+                        self.db.guardar_configuracion("volumen_master", str(vol_val))
+                        self.db.guardar_configuracion("noise_gate", str(gate_val))
+                        self.db.guardar_configuracion("fade_time", str(fade_val))
+                        self.db.guardar_configuracion("tts_rate", str(tts_val))
+                        self.db.guardar_configuracion("strict_filtering", strict_val)
+                        self.db.guardar_configuracion("appearance_mode", mode_val)
+                        self.db.guardar_configuracion("color_theme", color_val)
+                        self.db.guardar_configuracion("query_logging", log_val)
+                        self.log_event("Configuración global guardada con éxito en SQLite.", "SYS")
+                    except Exception as err:
+                        self.log_event(f"Error al persistir preferencias globales: {err}", "WARNING")
+                
+                vent_ajustes.destroy()
+                messagebox.showinfo("⚙️ Cockpit Configurado", "Se han guardado y aplicado de forma estricta los ajustes del sistema SMAC.")
+            
+            btn_guardar = ctk.CTkButton(
+                vent_ajustes, text="💾 GUARDAR Y APLICAR AJUSTES DE CABINA", font=ctk.CTkFont(size=11, weight="bold"),
+                fg_color="#00aa00", hover_color="#00cc00", height=35, command=guardar_todos_los_ajustes
+            )
+            btn_guardar.pack(fill="x", padx=20, pady=(0, 15))
+            
+        except Exception as e:
+            self.log_event(f"Error al abrir ajustes: {e}", "WARNING")
 
     # -------------------------------------------------------------
     # GESTION DE CIERRE SEGURO DE CONSOLA

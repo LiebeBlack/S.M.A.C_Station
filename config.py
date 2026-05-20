@@ -3,6 +3,16 @@
 Archivo de configuración del sistema SMAC Station.
 Modifica estos parámetros según tus necesidades.
 """
+import os
+import sys
+
+def obtener_ruta_datos(ruta_relativa):
+    """Obtiene la ruta para archivos de datos mutables al lado del ejecutable."""
+    if getattr(sys, 'frozen', False):
+        # Si está empaquetado por PyInstaller, buscar al lado del archivo .exe
+        directorio_exe = os.path.dirname(sys.executable)
+        return os.path.join(directorio_exe, ruta_relativa)
+    return os.path.join(os.path.abspath(os.path.dirname(__file__)), ruta_relativa)
 
 # Configuración de Audio
 AUDIO_CONFIG = {
@@ -19,16 +29,16 @@ AUDIO_CONFIG = {
     'output_format': 'wav',
     
     # Ruta predeterminada de cortina musical
-    'default_cortina': 'cortina_base.mp3',
+    'default_cortina': obtener_ruta_datos('cortina_base.mp3'),
     
     # Ruta de salida predeterminada
-    'default_output': 'boletin_salida.wav'
+    'default_output': obtener_ruta_datos('boletin_salida.wav')
 }
 
 # Configuración de Base de Datos
 DB_CONFIG = {
     # Nombre del archivo de base de datos
-    'db_file': 'smac_station.db',
+    'db_file': obtener_ruta_datos('smac_station.db'),
     
     # Habilitar logging de consultas
     'enable_query_logging': False
